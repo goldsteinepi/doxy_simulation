@@ -1,7 +1,7 @@
 #################
 # Syphilis and doxycycline simulation study
-# Citation: Tran NK, Goldstein ND, Welles SL. Countering the Rise of Syphilis in the Age of HIV PrEP: A Role for Doxycycline Prophylaxis? Manuscript in preparation.
-# Note: Simulation datasets may be downloaded from: https://drive.google.com/file/d/19Qd6CDay0qHLa-A0FutmlRRPvVTZczwt/view?usp=sharing
+# Citation: Tran NK, Goldstein ND, Welles SL. Countering the Rise of Syphilis: A Role for Doxycycline Post-Exposure Prophylaxis? Manuscript in preparation.
+# Note: Simulation datasets may be downloaded from: https://drive.google.com/file/d/1yN6W1OZYH515teERP1j5qirjvgYEEX7m/view?usp=sharing
 # 12/4/20 -- Nguyen Tran 
 #################
 
@@ -21,21 +21,14 @@ prevention_paradigm = function(rand_vector, prevention_var, dataset, interventio
     starting_vals = ifelse(dataset$HIV_STATUS==3 & rand_vector<=0.133, 2, ifelse(dataset$HIV_STATUS==3 & rand_vector<=0.347, 3, ifelse(dataset$HIV_STATUS==3 & rand_vector>0.347, 4, ifelse(dataset$HIV_STATUS==2 & rand_vector<=0.053, 1, ifelse(dataset$HIV_STATUS==2 & rand_vector<=0.374, 3, ifelse(dataset$HIV_STATUS==2 & rand_vector>0.374, 4, ifelse(dataset$HIV_STATUS==1 & rand_vector<=0.095, 1, ifelse(dataset$HIV_STATUS==1 & rand_vector<=0.402, 3, ifelse(dataset$HIV_STATUS==1 & rand_vector>0.402, 4, NA)))))))))
   } else if (prevention_var=="ONPREP") {
     #ONPREP (0=not on prep, 1=on prep)
-    starting_vals = ifelse(dataset$HIV_STATUS==1 & rand_vector<=(intervention_level/((1-0.19)-((1-0.19)*0.369))), 1, 0)
+    starting_vals = ifelse(dataset$HIV_STATUS==1 & rand_vector<=intervention_level, 1, 0)
   } else if (prevention_var=="HPVDOSES") {
     #HPVDOSES (number of doses of SY vaccine)
     starting_vals = ifelse(rand_vector<=(1-intervention_level), 0, ifelse(rand_vector<=(intervention_level*(4/13)+(1-intervention_level)), 1, ifelse(rand_vector<=(intervention_level*((4+2)/13)+(1-intervention_level)), 2, 3)))
-  } else if (prevention_var=="ONDOXYPREP"){
-    #ONDOXYPREP (0=not taking to doxy prep, 1=20% adherent, 2=40% adherent, 3=60% adherent, 4=72% adherent, 5=80% adherent ,6=100% adherent)
-    # starting_vals = ifelse(rand_vector<=(1-intervention_level), 0, ifelse(rand_vector<=(intervention_level*0.2+(1-intervention_level)),1, ifelse(rand_vector<=(intervention_level*0.4+(1-intervention_level)), 2, ifelse(rand_vector<=(intervention_level*0.6+(1-intervention_level)), 3, ifelse(rand_vector<=(intervention_level*0.72+(1-intervention_level)), 4, ifelse(rand_vector<=(intervention_level*0.8+(1-intervention_level)), 5, 6))))))
-    #ONDOXYPREP (0=not taking doxy prep, 1=93% adherent)
-    starting_vals = ifelse(rand_vector<=(1-intervention_level), 0, ifelse(rand_vector<=(intervention_level*0.72+(1-intervention_level)),1, 0))
-  } else if (prevention_var=="ONDOXYPEP"){
-    #ONDOXYPEP (0=not taking to doxy pep, 1=20% adherent, 2=40% adherent, 3=60% adherent, 4=80% adherent, 5=93%; 6=100% adherent)
-    # starting_vals = ifelse(rand_vector<=(1-intervention_level), 0, ifelse(rand_vector<=(intervention_level*0.2+(1-intervention_level)),1, ifelse(rand_vector<=(intervention_level*0.4+(1-intervention_level)), 2, ifelse(rand_vector<=(intervention_level*0.6+(1-intervention_level)), 3, ifelse(rand_vector<=(intervention_level*0.8+(1-intervention_level)), 4, ifelse(rand_vector<=(intervention_level*0.93+(1-intervention_level)), 5, 6))))))
-    #ONDOXYPEP (0=not taking doxy pep, 1=72% adherent)
-    starting_vals = ifelse(rand_vector<=(1-intervention_level), 0, ifelse(rand_vector<=(intervention_level*0.93+(1-intervention_level)),1, 0))
-  }
+  } else if (prevention_var=="ONDOXY"){
+    #ONDOXY (0=not taking doxy pep, 1=taking doxy)
+    starting_vals = ifelse(rand_vector<=(1-intervention_level), 0, ifelse(rand_vector<=(intervention_level+(1-intervention_level)),1, 0))
+  } 
   
   return(starting_vals)
 }
@@ -56,7 +49,7 @@ set.seed(777)
 nsims=25
 
 #number of prevention paradigm scenarios evaluated per simulation
-nparadigms = 13
+nparadigms = 26
 
 #ensure that each simulation is unique
 seed_val_population = sample(1:(nsims*10),nsims,replace=F)
@@ -181,7 +174,7 @@ for (sims in 1:nsims)
   set.seed(seed_val_population[sims])
   
   #generate an initial population of MSM, with same characteristics for all prevention scenarios
-  baseline_pop = data.frame("ID"=sex_network$ID, "ACTIVE"=NA, "AGE"=NA, "RACE"=NA, "HIV"=NA, "HIV_VL"=NA, "HIV_STATUS"=NA, "SY_ANAL"=NA, "SY_ORAL"=NA, "SY_ANAL_TYPE"=NA, "SY_ORAL_TYPE"=NA, "CIRC"=NA, "SEX_ACT"=NA, "SEX_POSITION_ANAL_PREF"=NA, "SEX_POSITION_ORAL_PREF"=NA, "SEX_POSITION_ANAL"=NA, "SEX_POSITION_ORAL"=NA, "HIV_TEST_DAY"=NA, "SY_TEST_DAY"=NA, "MAX_SEX"=NA, "SEX_COUNT"=0, "PARTNERS"=NA, "ORIGINAL_STATUS_HIV"=NA, "ORIGINAL_STATUS_SY_ANAL"=NA, "ORIGINAL_STATUS_SY_ORAL"=NA, "PREP_PREVENT"=0, "TAP_PREVENT"=0, "SERO_PREVENT"=0, "COND_PREVENT_ANAL"=0, "COND_PREVENT_ORAL"=0, "DOXYPEP_PREVENT_ANAL"=0, "DOXYPEP_PREVENT_ORAL"=0, "DOXYPREP_PREVENT_ANAL"=0, "DOXYPREP_PREVENT_ORAL"=0, "OVERALL_PREVENT_ANAL"=0,"OVERALL_PREVENT_ORAL"=0, "DISCORDANT"=0, "CAUSE_INFECT"=0, "DAYS_KNOWN_HIV_POSITIVE"=-1, "INCIDENCE_DAYS_HIV"=-1, "INCIDENCE_DAYS_SY_ANAL"=-1, "INCIDENCE_DAYS_SY_ORAL"=-1, stringsAsFactors=F)
+  baseline_pop = data.frame("ID"=sex_network$ID, "ACTIVE"=NA, "AGE"=NA, "RACE"=NA, "HIV"=NA, "HIV_VL"=NA, "HIV_STATUS"=NA, "SY_ANAL"=NA, "SY_ORAL"=NA, "SY_ANAL_TYPE"=NA, "SY_ORAL_TYPE"=NA, "CIRC"=NA, "SEX_ACT"=NA, "SEX_POSITION_ANAL_PREF"=NA, "SEX_POSITION_ORAL_PREF"=NA, "SEX_POSITION_ANAL"=NA, "SEX_POSITION_ORAL"=NA, "HIV_TEST_DAY"=NA, "SY_TEST_DAY"=NA, "MAX_SEX"=NA, "SEX_COUNT"=0, "PARTNERS"=NA, "ORIGINAL_STATUS_HIV"=NA, "ORIGINAL_STATUS_SY_ANAL"=NA, "ORIGINAL_STATUS_SY_ORAL"=NA, "PREP_PREVENT"=0, "TAP_PREVENT"=0, "SERO_PREVENT"=0, "COND_PREVENT_ANAL"=0, "COND_PREVENT_ORAL"=0, "DOXY_PREVENT_ANAL"=0, "DOXY_PREVENT_ORAL"=0, "OVERALL_PREVENT_ANAL"=0,"OVERALL_PREVENT_ORAL"=0, "DISCORDANT"=0, "CAUSE_INFECT"=0, "DAYS_KNOWN_HIV_POSITIVE"=-1, "INCIDENCE_DAYS_HIV"=-1, "INCIDENCE_DAYS_SY_ANAL"=-1, "INCIDENCE_DAYS_SY_ORAL"=-1, stringsAsFactors=F)
   
   #age distribution: 1=<=24, 2=>24
   baseline_pop$AGE = ifelse(runif(nagents_end[sims+1],0,1)<=0.3501, 1, 2)
@@ -242,9 +235,10 @@ for (sims in 1:nsims)
   baseline_pop$HIV_TEST_DAY = ifelse(futuretest==1, round(1+(110-1)*probdaytest), ifelse(futuretest==2, round(111+(220-111)*probdaytest), ifelse(futuretest==3, round(221+(330-221)*probdaytest), NA)))
   rm(testprob,probdaytest,futuretest)
   
-  #day of year will be tested for syphilis among HIV+ MSM, based on a future test probability of 1=tested 1/4 of year, 2=tested 1/2 of year, 3=tested in the year, 4=not tested
-  testprob = runif(nagents_end[sims+1],0,1)
+  #day of testing will be depdent based on HIV status
+  #HIV+ MSM: based on  future test probability 1=tested quarterly, 2=tested bi-annually, 3=tested annually, 4=not tested
   futuretest = ifelse(baseline_pop$HIV_STATUS==3 & testprob<=0.22, 1, ifelse(baseline_pop$HIV_STATUS==3 & testprob<=0.43, 2, ifelse(baseline_pop$HIV_STATUS==3 & testprob<=0.71, 3, 4)))
+  # HIV- or HIV unknown: only get tested annually 
   neg = ifelse(baseline_pop$HIV_STATUS==1 | baseline_pop$HIV_STATUS==2,1,0)
   neg1 = ifelse(neg==1 & futuretest==4,1,0)
   futuretest2 = ifelse(neg1==1 & testprob<=0.31, 1, 2)
@@ -273,85 +267,108 @@ for (sims in 1:nsims)
   randvax =  runif(nagents_end[sims+1],0,1)
   randdoxy = runif(nagents_end[sims+1],0,1)
   
-  #create prevention paradigm datasets: abcdefg where a=prep, b=treatment as prevention, c=condom use, d=seroadaption, e=vaccination, f=doxyprep, g=doxypep, h=syphilis detection/treatment
-  paradigm00000000 = baseline_pop
-  paradigm11111101 = baseline_pop
-  paradigm11111011 = baseline_pop
-  
-  #PrEP, TasP, condoms, seroadaption, vaccination, doxy PrEP
-  paradigm00000000$PREP = 0
-  paradigm00000000$TAP = 0
-  paradigm00000000$COND = 0
-  paradigm00000000$SERO = 0
-  paradigm00000000$VAX = 1
-  paradigm00000000$DOXYPREP = 0
-  paradigm00000000$DOXYPEP = 0
-  paradigm00000000$SY_TREAT = 0
-  paradigm00000000$TAPVL = prevention_paradigm(randtap,"TAPVL",paradigm00000000)
-  paradigm00000000$PROBCOND = prevention_paradigm(randcond,"PROBCOND",paradigm00000000)
-  paradigm00000000$SEROTYPE = prevention_paradigm(randsero,"SEROTYPE",paradigm00000000)
-  
-  #PrEP, TasP, condoms, seroadaption, vaccination, doxy PrEP
-  paradigm11111101$PREP = 1 #turn off for calibration to historic data
-  paradigm11111101$TAP = 1
-  paradigm11111101$COND = 1
-  paradigm11111101$SERO = 1
-  paradigm11111101$VAX = 1
-  paradigm11111101$DOXYPREP = 1
-  paradigm11111101$DOXYPEP = 0
-  paradigm11111101$SY_TREAT = 1
-  paradigm11111101$ONPREP = prevention_paradigm(randprep,"ONPREP",paradigm11111101,0.12)
-  paradigm11111101$TAPVL = prevention_paradigm(randtap,"TAPVL",paradigm11111101)
-  paradigm11111101$PROBCOND = prevention_paradigm(randcond,"PROBCOND",paradigm11111101)
-  paradigm11111101$SEROTYPE = prevention_paradigm(randsero,"SEROTYPE",paradigm11111101)
+  #create prevention paradigm datasets: abcdef where a=prep, b=treatment as prevention, c=condom use, d=seroadaption, e=vaccination, f=doxycycline
+  paradigm111111 = baseline_pop
   
   #PrEP, TasP, condoms, seroadaption, vaccination, doxy PEP
-  paradigm11111011$PREP = 1 #turn off for calibration to historic data
-  paradigm11111011$TAP = 1
-  paradigm11111011$COND = 1
-  paradigm11111011$SERO = 1
-  paradigm11111011$VAX = 1
-  paradigm11111011$DOXYPREP = 0
-  paradigm11111011$DOXYPEP = 1
-  paradigm11111011$SY_TREAT = 1 
-  paradigm11111011$ONPREP = prevention_paradigm(randprep,"ONPREP",paradigm11111011,0.12)
-  paradigm11111011$TAPVL = prevention_paradigm(randtap,"TAPVL",paradigm11111011)
-  paradigm11111011$PROBCOND = prevention_paradigm(randcond,"PROBCOND",paradigm11111011)
-  paradigm11111011$SEROTYPE = prevention_paradigm(randsero,"SEROTYPE",paradigm11111011)
+  paradigm111111$PREP = 1 
+  paradigm111111$TAP = 1
+  paradigm111111$COND = 1
+  paradigm111111$SERO = 1
+  paradigm111111$VAX = 1
+  paradigm111111$DOXY = 1
+  paradigm111111$SYTREAT = 1 
+  paradigm111111$ONPREP = prevention_paradigm(randprep,"ONPREP",paradigm111111,0.122)
+  paradigm111111$TAPVL = prevention_paradigm(randtap,"TAPVL",paradigm111111)
+  paradigm111111$PROBCOND = prevention_paradigm(randcond,"PROBCOND",paradigm111111)
+  paradigm111111$SEROTYPE = prevention_paradigm(randsero,"SEROTYPE",paradigm111111)
+  
   
   #assign HIV PrEP and doxy into lists
-  abm_sims = list("paradigm00000000doxy0"=cbind(paradigm00000000,"ONDOXYPREP"=prevention_paradigm(randdoxy,"ONDOXYPREP",paradigm00000000,0)),
-                  "paradigm11111101doxy0"=cbind(paradigm11111101,"ONDOXYPREP"=prevention_paradigm(randdoxy,"ONDOXYPREP",paradigm11111101,0)),
-                  "paradigm11111101doxy10"=cbind(paradigm11111101,"ONDOXYPREP"=prevention_paradigm(randdoxy,"ONDOXYPREP",paradigm11111101,0.10)),
-                  "paradigm11111101doxy20"=cbind(paradigm11111101,"ONDOXYPREP"=prevention_paradigm(randdoxy,"ONDOXYPREP",paradigm11111101,0.20)),
-                  "paradigm11111101doxy30"=cbind(paradigm11111101,"ONDOXYPREP"=prevention_paradigm(randdoxy,"ONDOXYPREP",paradigm11111101,0.30)),
-                  "paradigm11111101doxy40"=cbind(paradigm11111101,"ONDOXYPREP"=prevention_paradigm(randdoxy,"ONDOXYPREP",paradigm11111101,0.40)),
-                  "paradigm11111101doxy50"=cbind(paradigm11111101,"ONDOXYPREP"=prevention_paradigm(randdoxy,"ONDOXYPREP",paradigm11111101,0.50)),
-                  "paradigm11111011doxy0"=cbind(paradigm11111011,"ONDOXYPEP"=prevention_paradigm(randdoxy,"ONDOXYPEP",paradigm11111011,0)),
-                  "paradigm11111011doxy10"=cbind(paradigm11111011,"ONDOXYPEP"=prevention_paradigm(randdoxy,"ONDOXYPEP",paradigm11111011,0.10)),
-                  "paradigm11111011doxy20"=cbind(paradigm11111011,"ONDOXYPEP"=prevention_paradigm(randdoxy,"ONDOXYPEP",paradigm11111011,0.20)),
-                  "paradigm11111011doxy30"=cbind(paradigm11111011,"ONDOXYPEP"=prevention_paradigm(randdoxy,"ONDOXYPEP",paradigm11111011,0.30)),
-                  "paradigm11111011doxy40"=cbind(paradigm11111011,"ONDOXYPEP"=prevention_paradigm(randdoxy,"ONDOXYPEP",paradigm11111011,0.40)),
-                  "paradigm11111011doxy50"=cbind(paradigm11111011,"ONDOXYPEP"=prevention_paradigm(randdoxy,"ONDOXYPEP",paradigm11111011,0.50)))
+  abm_sims = list("paradigm111111doxy00"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0)),
+                  "paradigm111111doxy11"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.2)),
+                  "paradigm111111doxy12"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.2)),
+                  "paradigm111111doxy13"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.2)),
+                  "paradigm111111doxy14"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.2)),
+                  "paradigm111111doxy15"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.2)),
+                  "paradigm111111doxy21"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.4)),
+                  "paradigm111111doxy22"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.4)),
+                  "paradigm111111doxy23"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.4)),
+                  "paradigm111111doxy24"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.4)),
+                  "paradigm111111doxy25"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.4)),
+                  "paradigm111111doxy31"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.6)),
+                  "paradigm111111doxy32"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.6)),
+                  "paradigm111111doxy33"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.6)),
+                  "paradigm111111doxy34"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.6)),
+                  "paradigm111111doxy35"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.6)),
+                  "paradigm111111doxy41"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.8)),
+                  "paradigm111111doxy42"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.8)),
+                  "paradigm111111doxy43"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.8)),
+                  "paradigm111111doxy44"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.8)),
+                  "paradigm111111doxy45"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,0.8)),
+                  "paradigm111111doxy51"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,1)),
+                  "paradigm111111doxy52"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,1)),
+                  "paradigm111111doxy53"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,1)),
+                  "paradigm111111doxy54"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,1)),
+                  "paradigm111111doxy55"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,1)))
   
+  # determine doxycycline adherence for each level of uptake 
+  abm_sims$paradigm111111doxy11$ADHERE = ifelse(abm_sims$paradigm111111doxy11$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.2, 1, 0)
+  abm_sims$paradigm111111doxy12$ADHERE = ifelse(abm_sims$paradigm111111doxy12$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.4, 1, 0)
+  abm_sims$paradigm111111doxy13$ADHERE = ifelse(abm_sims$paradigm111111doxy13$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.6, 1, 0)
+  abm_sims$paradigm111111doxy14$ADHERE = ifelse(abm_sims$paradigm111111doxy14$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.8, 1, 0)
+  abm_sims$paradigm111111doxy15$ADHERE = ifelse(abm_sims$paradigm111111doxy15$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 1.0, 1, 0)
+  abm_sims$paradigm111111doxy21$ADHERE = ifelse(abm_sims$paradigm111111doxy21$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.2, 1, 0)
+  abm_sims$paradigm111111doxy22$ADHERE = ifelse(abm_sims$paradigm111111doxy22$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.4, 1, 0)
+  abm_sims$paradigm111111doxy23$ADHERE = ifelse(abm_sims$paradigm111111doxy23$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.6, 1, 0)
+  abm_sims$paradigm111111doxy24$ADHERE = ifelse(abm_sims$paradigm111111doxy24$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.8, 1, 0)
+  abm_sims$paradigm111111doxy25$ADHERE = ifelse(abm_sims$paradigm111111doxy25$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 1.0, 1, 0)
+  abm_sims$paradigm111111doxy31$ADHERE = ifelse(abm_sims$paradigm111111doxy31$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.2, 1, 0)
+  abm_sims$paradigm111111doxy32$ADHERE = ifelse(abm_sims$paradigm111111doxy32$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.4, 1, 0)
+  abm_sims$paradigm111111doxy33$ADHERE = ifelse(abm_sims$paradigm111111doxy33$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.6, 1, 0)
+  abm_sims$paradigm111111doxy34$ADHERE = ifelse(abm_sims$paradigm111111doxy34$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.8, 1, 0)
+  abm_sims$paradigm111111doxy35$ADHERE = ifelse(abm_sims$paradigm111111doxy35$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 1.0, 1, 0)
+  abm_sims$paradigm111111doxy41$ADHERE = ifelse(abm_sims$paradigm111111doxy41$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.2, 1, 0)
+  abm_sims$paradigm111111doxy42$ADHERE = ifelse(abm_sims$paradigm111111doxy42$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.4, 1, 0)
+  abm_sims$paradigm111111doxy43$ADHERE = ifelse(abm_sims$paradigm111111doxy43$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.6, 1, 0)
+  abm_sims$paradigm111111doxy44$ADHERE = ifelse(abm_sims$paradigm111111doxy44$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.8, 1, 0)
+  abm_sims$paradigm111111doxy45$ADHERE = ifelse(abm_sims$paradigm111111doxy45$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 1.0, 1, 0)
+  abm_sims$paradigm111111doxy51$ADHERE = ifelse(abm_sims$paradigm111111doxy51$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.2, 1, 0)
+  abm_sims$paradigm111111doxy52$ADHERE = ifelse(abm_sims$paradigm111111doxy52$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.4, 1, 0)
+  abm_sims$paradigm111111doxy53$ADHERE = ifelse(abm_sims$paradigm111111doxy53$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.6, 1, 0)
+  abm_sims$paradigm111111doxy54$ADHERE = ifelse(abm_sims$paradigm111111doxy54$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.8, 1, 0)
+  abm_sims$paradigm111111doxy55$ADHERE = ifelse(abm_sims$paradigm111111doxy55$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 1.0, 1, 0)
   
   #initialize a list for longitudinal tracking of outcomes; must match length of abm_sims
-  long_sims = list("paradigm00000000doxy0"=data.frame("DAY"=1:length_sim,"HIV"=NA, "SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
-                   "paradigm11111101doxy0"=data.frame("DAY"=1:length_sim,"HIV"=NA, "SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
-                   "paradigm11111101doxy10"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
-                   "paradigm11111101doxy20"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
-                   "paradigm11111101doxy30"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
-                   "paradigm11111101doxy40"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
-                   "paradigm11111101doxy50"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
-                   "paradigm11111011doxy0"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
-                   "paradigm11111011doxy10"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
-                   "paradigm11111011doxy20"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
-                   "paradigm11111011doxy30"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
-                   "paradigm11111011doxy40"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
-                   "paradigm11111011doxy50"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F))
+  long_sims = list("paradigm111111doxy00"=data.frame("DAY"=1:length_sim,"HIV"=NA, "SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy11"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy12"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy13"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy14"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy15"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy21"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy22"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy23"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy24"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy25"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy31"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy32"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy33"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy34"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy35"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy41"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy42"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy43"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy44"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy45"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy51"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy52"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy53"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy54"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F),
+                   "paradigm111111doxy55"=data.frame("DAY"=1:length_sim,"HIV"=NA,"SY_ANAL"=NA, "SY_ORAL"=NA, stringsAsFactors=F))
   
   #cleanup
-  rm(randtap,randcond,randsero,randprep,randvax,randdoxy,baseline_pop,paradigm11111101,paradigm11111011,paradigm00000000,simnw)
+  rm(randtap,randcond,randsero,randprep,randvax,randdoxy,baseline_pop,paradigm111111,simnw)
   gc()
   
   
@@ -382,17 +399,17 @@ gc()
 
 
 # Assessment of Baseline Syphilis 
-# t = table(abm_sims_50$simulation_1_paradigm1111110doxy0$SY_ANAL); t
+# t = table(abm_sims_50$simulation_1_paradigm11111101doxy0$SY_ANAL); t
 # prop.table(t)
-# t1 = table(abm_sims_50$simulation_1_paradigm1111110doxy0$SY_ANAL, abm_sims_50$simulation_1_paradigm1111110doxy0$AGE); t1
+# t1 = table(abm_sims_50$simulation_1_paradigm11111101doxy0$SY_ANAL, abm_sims_50$simulation_1_paradigm11111101doxy0$AGE); t1
 # prop.table(t1)
-# t2 = table(abm_sims_50$simulation_1_paradigm1111110doxy0$SY_ANAL, abm_sims_50$simulation_1_paradigm1111110doxy0$RACE); t2
+# t2 = table(abm_sims_50$simulation_1_paradigm11111101doxy0$SY_ANAL, abm_sims_50$simulation_1_paradigm11111101doxy0$RACE); t2
 # prop.table(t2)
-# t3 = table(abm_sims_50$simulation_1_paradigm1111110doxy0$SY_ORAL); t3
+# t3 = table(abm_sims_50$simulation_1_paradigm11111101doxy0$SY_ORAL); t3
 # prop.table(t3)
-# t4 = table(abm_sims_50$simulation_1_paradigm1111110doxy0$SY_ORAL, abm_sims_50$simulation_1_paradigm1111110doxy0$AGE); t4
+# t4 = table(abm_sims_50$simulation_1_paradigm11111101doxy0$SY_ORAL, abm_sims_50$simulation_1_paradigm11111101doxy0$AGE); t4
 # prop.table(t4)
-# t5 = table(abm_sims_50$simulation_1_paradigm1111110doxy0$SY_ORAL, abm_sims_50$simulation_1_paradigm1111110doxy0$RACE); t5
+# t5 = table(abm_sims_50$simulation_1_paradigm11111101doxy0$SY_ORAL, abm_sims_50$simulation_1_paradigm11111101doxy0$RACE); t5
 # prop.table(t5)
 
 
@@ -405,9 +422,8 @@ save.image("simulation initialization population_20y_25sim.RData")
 
 load("simulation initialization population_20y_25sim.RData")
 
-l#ensure that all runs start equivalently
+#ensure that all runs start equivalently
 set.seed(777)
-# nparadigms=22
 
 for (sims in 1:nsims)
 {
@@ -470,7 +486,7 @@ for (sims in 1:nsims)
       abm_sims[[current_data]]$SY_ORAL_TYPE = ifelse(abm_sims[[current_data]]$SY_ORAL_TYPE==1 & abm_sims[[current_data]]$INCIDENCE_DAYS_SY_ORAL==366, 2, abm_sims[[current_data]]$SY_ORAL_TYPE)
       
       #treatment for syphilis 
-      if (unique(abm_sims[[current_data]]$SY_TREAT)==1) {
+      if (unique(abm_sims[[current_data]]$SYTREAT)==1) {
         abm_sims[[current_data]]$SY_ANAL = ifelse((!is.na(abm_sims[[current_data]]$SY_TEST_DAY) & ((day-abm_sims[[current_data]]$SY_TEST_DAY) %% 365)==0) & (abm_sims[[current_data]]$SY_ANAL!=0), 0, abm_sims[[current_data]]$SY_ANAL)
         abm_sims[[current_data]]$SY_ORAL = ifelse((!is.na(abm_sims[[current_data]]$SY_TEST_DAY) & ((day-abm_sims[[current_data]]$SY_TEST_DAY) %% 365)==0) & (abm_sims[[current_data]]$SY_ORAL!=0), 0, abm_sims[[current_data]]$SY_ORAL)
       }
@@ -553,10 +569,8 @@ for (sims in 1:nsims)
           sex_exposed$tapct = 0                 #infection blocked from TAP, ego
           sex_exposed$seroct_hiv = 0            #HIV infection blocked from seroadapation, ego
           sex_exposed$seroct_sy = 0             #SY anal infection blocked from seroadapation, ego
-          sex_exposed$doxypepct_anal = 0        #SY anal infection blocked from doxycycline pep, ego
-          sex_exposed$doxyprepct_anal = 0       #SY anal infection blocked from doxycycline prep, ego
-          sex_exposed$doxypepct_oral = 0        #SY oral infection blocked from doxycycline pep, ego
-          sex_exposed$doxyprepct_oral = 0       #SY oral infection blocked from doxycycline prep, ego
+          sex_exposed$doxyct_anal = 0           #SY anal infection blocked from doxycycline, ego
+          sex_exposed$doxyct_oral = 0           #SY oral infection blocked from doxycycline, ego
           sex_exposed$prevct_sy_anal = 0        #SY anal infection blocked from any prevention strategy, ego
           sex_exposed$prevct_sy_oral = 0        #SY oral infection blocked from any prevention strategy, ego
           sex_exposed$infectct = 0              #ego caused a new SY anal infection to partner
@@ -577,10 +591,8 @@ for (sims in 1:nsims)
           sex_exposed$parttapct = 0             #infection blocked from TAP, partner
           sex_exposed$partseroct_hiv = 0        #HIV infection blocked from seroadapation, partner
           sex_exposed$partseroct_sy = 0         #SY anal infection blocked from seroadapation, partner
-          sex_exposed$partdoxypepct_anal = 0    #SY anal infection blocked from doxycycline pep, partner
-          sex_exposed$partdoxyprepct_anal = 0   #SY anal infection blocked from doxycycline prep, partner
-          sex_exposed$partdoxypepct_oral = 0    #SY oral infection blocked from doxycycline pep, partner
-          sex_exposed$partdoxyprepct_oral = 0   #SY oral infection blocked from doxycycline prep, partner
+          sex_exposed$partdoxyct_anal = 0       #SY anal infection blocked from doxycycline, partner
+          sex_exposed$partdoxyct_oral = 0       #SY oral infection blocked from doxycycline, partner
           sex_exposed$partprevct_sy_anal = 0    #SY anal infection blocked from any prevention strategy, partner
           sex_exposed$partprevct_sy_oral = 0    #SY oral infection blocked from any prevention strategy, partner
           sex_exposed$partinfectct = 0          #partner caused a new SY anal infection to partner
@@ -644,16 +656,16 @@ for (sims in 1:nsims)
             partavoid = ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==3 & abm_sims[[current_data]]$HIV_STATUS[exposed_hiv_ego]==3, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==3 & abm_sims[[current_data]]$HIV_STATUS[exposed_hiv_ego]==3, 1, 0)))
             
             #seroadaption strategies for HIV
-            seroblock_hiv = ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0010, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==2 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0059, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0101, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==2 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0569, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0010, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==2 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0059, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0101, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==2 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0569, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0134, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==2 & probinfect1_hiv[sex_exposed$HIV==1] > 0.1284, 1, 0))))))))))
-            partseroblock_hiv = ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0010, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==2 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0059, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0101, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==2 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0569, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0010, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==2 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0059, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0101, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==2 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0569, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0134, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==2 & probinfect1_hiv[sex_exposed$HIV==1] > 0.1284, 1, 0))))))))))
+            seroblock_hiv = ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0010, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==0 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0059, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0101, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==0 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0569, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0010, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==0 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0059, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0101, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==0 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0569, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0134, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_partner]==2 & probinfect1_hiv[sex_exposed$HIV==1] > 0.1284, 1, 0))))))))))
+            partseroblock_hiv = ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0010, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==0 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0059, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0101, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==0 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0569, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0010, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==0 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0059, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0101, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==2 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==0 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0569, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==1 & probinfect1_hiv[sex_exposed$HIV==1] > 0.0134, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$HIV_VL[exposed_hiv_ego]==2 & probinfect1_hiv[sex_exposed$HIV==1] > 0.1284, 1, 0))))))))))
             
             #check if infection blocked for HIV
             sex_exposed$seroct_hiv[sex_exposed$HIV==1] = ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==1, 1, ifelse(sex_exposed$infection_hiv[sex_exposed$HIV==1]==1 & avoid==0 & seroblock_hiv==1, 1, 0))
             sex_exposed$partseroct_hiv[sex_exposed$HIV==1] = ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==1, 1, ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & partavoid==0 & partseroblock_hiv==1, 1, 0))
             
             #seroadaption strategies for HIV, SYPHILIS implications; NAs (and possibly 0s) get returned for HIV infections without correspoding SY infection
-            seroblock_sy = ifelse(sex_exposed$infection_sy_anal[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==1 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.038, 1, ifelse(sex_exposed$infection_sy_anal[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==2 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.071, 1, ifelse(sex_exposed$infection_sy_anal[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==1 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.038, 1, ifelse(sex_exposed$infection_sy_anal[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==2 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.071, 1, ifelse(sex_exposed$infection_sy_anal[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.546, 1, 0)))))
-            partseroblock_sy = ifelse(sex_exposed$partinfection_sy_anal[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==1 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.038, 1, ifelse(sex_exposed$partinfection_sy_anal[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==2 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.071, 1, ifelse(sex_exposed$partinfection_sy_anal[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==1 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.038, 1, ifelse(sex_exposed$partinfection_sy_anal[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==2 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.071, 1, ifelse(sex_exposed$partinfection_sy_anal[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.546, 1, 0)))))
+            seroblock_sy = ifelse(sex_exposed$infection_sy_anal[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==1 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.038, 1, ifelse(sex_exposed$infection_sy_anal[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==0 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.071, 1, ifelse(sex_exposed$infection_sy_anal[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==1 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.038, 1, ifelse(sex_exposed$infection_sy_anal[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_ego]==0 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.071, 1, ifelse(sex_exposed$infection_sy_anal[sex_exposed$HIV==1]==1 & avoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.546, 1, 0)))))
+            partseroblock_sy = ifelse(sex_exposed$partinfection_sy_anal[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==1 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.038, 1, ifelse(sex_exposed$partinfection_sy_anal[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_partner]==1 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==0 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.071, 1, ifelse(sex_exposed$partinfection_sy_anal[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==1 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.038, 1, ifelse(sex_exposed$partinfection_sy_anal[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==2 & abm_sims[[current_data]]$CIRC[exposed_hiv_partner]==0 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.071, 1, ifelse(sex_exposed$partinfection_sy_anal[sex_exposed$HIV==1]==1 & partavoid==0 & abm_sims[[current_data]]$SEROTYPE[exposed_hiv_ego]==1 & probinfect1_sy_anal[sex_exposed$HIV==1] > 0.546, 1, 0)))))
             
             #check if infection blocked for SYPHILIS anal, removing NAs/0s from earlier that are not coinfections
             if (sum(sex_exposed$HIV_SY_ANAL)>0) { sex_exposed$seroct_sy[sex_exposed$HIV_SY_ANAL==1] = (ifelse(sex_exposed$infection_sy_anal[sex_exposed$HIV==1]==1 & avoid==1, 1, ifelse(sex_exposed$infection_sy_anal[sex_exposed$HIV==1]==1 & avoid==0 & seroblock_sy==1, 1, 0)))[which(!is.na(sex_exposed$infection_sy_anal[sex_exposed$HIV==1]))] }
@@ -710,32 +722,17 @@ for (sims in 1:nsims)
             sex_exposed$partprepct[sex_exposed$HIV==1] = ifelse(sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1 & abm_sims[[current_data]]$ONPREP[exposed_hiv_partner]==1, 1, 0)
           }
           
-          #determine infection under doxy PEP scenarios 
-          if (unique(abm_sims[[current_data]]$DOXYPEP)==1)
-          {
-            #calculate probabilities of doxycycline success
-            randdoxy = runif(nrow(sex_exposed),0,1)
-
-            #check if infection blocked
-            sex_exposed$doxypepct_anal[sex_exposed$SY_ANAL==1] = ifelse(sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1 & abm_sims[[current_data]]$ONDOXYPEP[exposed_sy_anal_ego]==1 & randdoxy[sex_exposed$SY_ANAL==1]<=0.73, 1, 0)
-            sex_exposed$partdoxypepct_anal[sex_exposed$SY_ANAL==1] = ifelse(sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1 & abm_sims[[current_data]]$ONDOXYPEP[exposed_sy_anal_partner]==1 & randdoxy[sex_exposed$SY_ANAL==1]<=0.73, 1, 0)
-            sex_exposed$doxypepct_oral[sex_exposed$SY_ORAL==1] = ifelse(sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]==1 & abm_sims[[current_data]]$ONDOXYPEP[exposed_sy_oral_ego]==1 & randdoxy[sex_exposed$SY_ORAL==1]<=0.73, 1, 0)
-            sex_exposed$partdoxypepct_oral[sex_exposed$SY_ORAL==1] = ifelse(sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]==1 & abm_sims[[current_data]]$ONDOXYPEP[exposed_sy_oral_partner]==1 & randdoxy[sex_exposed$SY_ORAL==1]<=0.73, 1, 0)
-            
-            rm(randdoxy)
-          }
-          
-          #determine infection under doxy PREP scenarios 
-          if (unique(abm_sims[[current_data]]$DOXYPREP)==1)
+          #determine infection under doxy adherence scenarios  
+          if (unique(abm_sims[[current_data]]$DOXY)==1)
           {
             #calculate probabilities of doxycycline success
             randdoxy = runif(nrow(sex_exposed),0,1)
             
             #check if infection blocked
-            sex_exposed$doxyprepct_anal[sex_exposed$SY_ANAL==1] = ifelse(sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1 & abm_sims[[current_data]]$ONDOXYPREP[exposed_sy_anal_ego]==1 & randdoxy[sex_exposed$SY_ANAL==1]<=0.73, 1, 0)
-            sex_exposed$partdoxyprepct_anal[sex_exposed$SY_ANAL==1] = ifelse(sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1 & abm_sims[[current_data]]$ONDOXYPREP[exposed_sy_anal_partner]==1 & randdoxy[sex_exposed$SY_ANAL==1]<=0.73, 1, 0)
-            sex_exposed$doxyprepct_oral[sex_exposed$SY_ORAL==1] = ifelse(sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]==1 & abm_sims[[current_data]]$ONDOXYPREP[exposed_sy_oral_ego]==1 & randdoxy[sex_exposed$SY_ORAL==1]<=0.73, 1, 0)
-            sex_exposed$partdoxyprepct_oral[sex_exposed$SY_ORAL==1] = ifelse(sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]==1 & abm_sims[[current_data]]$ONDOXYPREP[exposed_sy_oral_partner]==1 & randdoxy[sex_exposed$SY_ORAL==1]<=0.73, 1, 0)
+            sex_exposed$doxyct_anal[sex_exposed$SY_ANAL==1] = ifelse(sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1 & abm_sims[[current_data]]$ADHERE[exposed_sy_anal_ego]==1 & randdoxy[sex_exposed$SY_ANAL==1]<=0.73, 1, 0)
+            sex_exposed$partdoxyct_anal[sex_exposed$SY_ANAL==1] = ifelse(sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1 & abm_sims[[current_data]]$ADHERE[exposed_sy_anal_partner]==1 & randdoxy[sex_exposed$SY_ANAL==1]<=0.73, 1, 0)
+            sex_exposed$doxyct_oral[sex_exposed$SY_ORAL==1] = ifelse(sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]==1 & abm_sims[[current_data]]$ADHERE[exposed_sy_oral_ego]==1 & randdoxy[sex_exposed$SY_ORAL==1]<=0.73, 1, 0)
+            sex_exposed$partdoxyct_oral[sex_exposed$SY_ORAL==1] = ifelse(sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]==1 & abm_sims[[current_data]]$ADHERE[exposed_sy_oral_partner]==1 & randdoxy[sex_exposed$SY_ORAL==1]<=0.73, 1, 0)
             
             rm(randdoxy)
           }
@@ -748,20 +745,20 @@ for (sims in 1:nsims)
           sex_exposed$partnewVL[sex_exposed$HIV==1] = ifelse((sex_exposed$partcondct_hiv[sex_exposed$HIV==1] + sex_exposed$partprepct[sex_exposed$HIV==1] + sex_exposed$parttapct[sex_exposed$HIV==1] + sex_exposed$partseroct_hiv[sex_exposed$HIV==1])==0 & sex_exposed$partinfection_hiv[sex_exposed$HIV==1]==1, 2, sex_exposed$partnewVL[sex_exposed$HIV==1])
           
           #resolve infection statistics, SYPHILIS anal
-          sex_exposed$newSY_ANAL[sex_exposed$SY_ANAL==1] = ifelse((sex_exposed$condct_sy_anal[sex_exposed$SY_ANAL==1] + sex_exposed$seroct_sy[sex_exposed$SY_ANAL==1] + sex_exposed$doxypepct_anal[sex_exposed$SY_ANAL==1] + sex_exposed$doxyprepct_anal[sex_exposed$SY_ANAL==1])==0 & sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1, 1, sex_exposed$newSY_ANAL[sex_exposed$SY_ANAL==1])
-          sex_exposed$newSY_ANAL_TYPE[sex_exposed$SY_ANAL==1] = ifelse((sex_exposed$condct_sy_anal[sex_exposed$SY_ANAL==1] + sex_exposed$seroct_sy[sex_exposed$SY_ANAL==1] + sex_exposed$doxypepct_anal[sex_exposed$SY_ANAL==1] + sex_exposed$doxyprepct_anal[sex_exposed$SY_ANAL==1])==0 & sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1, 1, sex_exposed$newSY_ANAL_TYPE[sex_exposed$SY_ANAL==1])
-          sex_exposed$partnewSY_ANAL[sex_exposed$SY_ANAL==1] = ifelse((sex_exposed$partcondct_sy_anal[sex_exposed$SY_ANAL==1] + sex_exposed$partseroct_sy[sex_exposed$SY_ANAL==1] + sex_exposed$partdoxypepct_anal[sex_exposed$SY_ANAL==1] + sex_exposed$partdoxyprepct_anal[sex_exposed$SY_ANAL==1])==0 & sex_exposed$partinfection_sy_anal[sex_exposed$SY_ANAL==1]==1, 1, sex_exposed$partnewSY_ANAL[sex_exposed$SY_ANAL==1])
-          sex_exposed$partnewSY_ANAL_TYPE[sex_exposed$SY_ANAL==1] = ifelse((sex_exposed$partcondct_sy_anal[sex_exposed$SY_ANAL==1] + sex_exposed$partseroct_sy[sex_exposed$SY_ANAL==1] + sex_exposed$partdoxypepct_anal[sex_exposed$SY_ANAL==1] + sex_exposed$partdoxyprepct_anal[sex_exposed$SY_ANAL==1])==0 & sex_exposed$partinfection_sy_anal[sex_exposed$SY_ANAL==1]==1, 1, sex_exposed$partnewSY_ANAL_TYPE[sex_exposed$SY_ANAL==1])
-          sex_exposed$prevct_sy_anal[sex_exposed$SY_ANAL==1] = ifelse((sex_exposed$condct_sy_anal[sex_exposed$SY_ANAL==1] + sex_exposed$seroct_sy[sex_exposed$SY_ANAL==1] + sex_exposed$doxypepct_anal[sex_exposed$SY_ANAL==1] + sex_exposed$doxyprepct_anal[sex_exposed$SY_ANAL==1])>0 & sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1, 1, sex_exposed$prevct_sy_anal[sex_exposed$SY_ANAL==1])
-          sex_exposed$partprevct_sy_anal[sex_exposed$SY_ANAL==1] = ifelse((sex_exposed$partcondct_sy_anal[sex_exposed$SY_ANAL==1] + sex_exposed$partseroct_sy[sex_exposed$SY_ANAL==1] + sex_exposed$partdoxypepct_anal[sex_exposed$SY_ANAL==1] + sex_exposed$partdoxyprepct_anal[sex_exposed$SY_ANAL==1])>0 & sex_exposed$partinfection_sy_anal[sex_exposed$SY_ANAL==1]==1, 1, sex_exposed$partprevct_sy_anal[sex_exposed$SY_ANAL==1])
+          sex_exposed$newSY_ANAL[sex_exposed$SY_ANAL==1] = ifelse((sex_exposed$condct_sy_anal[sex_exposed$SY_ANAL==1] + sex_exposed$seroct_sy[sex_exposed$SY_ANAL==1] + sex_exposed$doxyct_anal[sex_exposed$SY_ANAL==1])==0 & sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1, 1, sex_exposed$newSY_ANAL[sex_exposed$SY_ANAL==1])
+          sex_exposed$newSY_ANAL_TYPE[sex_exposed$SY_ANAL==1] = ifelse((sex_exposed$condct_sy_anal[sex_exposed$SY_ANAL==1] + sex_exposed$seroct_sy[sex_exposed$SY_ANAL==1] + sex_exposed$doxyct_anal[sex_exposed$SY_ANAL==1])==0 & sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1, 1, sex_exposed$newSY_ANAL_TYPE[sex_exposed$SY_ANAL==1])
+          sex_exposed$prevct_sy_anal[sex_exposed$SY_ANAL==1] = ifelse((sex_exposed$condct_sy_anal[sex_exposed$SY_ANAL==1] + sex_exposed$seroct_sy[sex_exposed$SY_ANAL==1] + sex_exposed$doxyct_anal[sex_exposed$SY_ANAL==1])>0 & sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1, 1, sex_exposed$prevct_sy_anal[sex_exposed$SY_ANAL==1])
+          sex_exposed$partnewSY_ANAL[sex_exposed$SY_ANAL==1] = ifelse((sex_exposed$partcondct_sy_anal[sex_exposed$SY_ANAL==1] + sex_exposed$partseroct_sy[sex_exposed$SY_ANAL==1] + sex_exposed$partdoxyct_anal[sex_exposed$SY_ANAL==1])==0 & sex_exposed$partinfection_sy_anal[sex_exposed$SY_ANAL==1]==1, 1, sex_exposed$partnewSY_ANAL[sex_exposed$SY_ANAL==1])
+          sex_exposed$partnewSY_ANAL_TYPE[sex_exposed$SY_ANAL==1] = ifelse((sex_exposed$partcondct_sy_anal[sex_exposed$SY_ANAL==1] + sex_exposed$partseroct_sy[sex_exposed$SY_ANAL==1] + sex_exposed$partdoxyct_anal[sex_exposed$SY_ANAL==1])==0 & sex_exposed$partinfection_sy_anal[sex_exposed$SY_ANAL==1]==1, 1, sex_exposed$partnewSY_ANAL_TYPE[sex_exposed$SY_ANAL==1])
+          sex_exposed$partprevct_sy_anal[sex_exposed$SY_ANAL==1] = ifelse((sex_exposed$partcondct_sy_anal[sex_exposed$SY_ANAL==1] + sex_exposed$partseroct_sy[sex_exposed$SY_ANAL==1] + sex_exposed$partdoxyct_anal[sex_exposed$SY_ANAL==1])>0 & sex_exposed$partinfection_sy_anal[sex_exposed$SY_ANAL==1]==1, 1, sex_exposed$partprevct_sy_anal[sex_exposed$SY_ANAL==1])
           
           #resolve infection statistics, SYPHILIS oral
-          sex_exposed$newSY_ORAL[sex_exposed$SY_ORAL==1] = ifelse((sex_exposed$condct_sy_oral[sex_exposed$SY_ORAL==1] + sex_exposed$doxypepct_oral[sex_exposed$SY_ORAL==1] + sex_exposed$doxyprepct_oral[sex_exposed$SY_ORAL==1])==0 & sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]>=1, sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1], sex_exposed$newSY_ORAL[sex_exposed$SY_ORAL==1])
-          sex_exposed$newSY_ORAL_TYPE[sex_exposed$SY_ORAL==1] = ifelse((sex_exposed$condct_sy_oral[sex_exposed$SY_ORAL==1] + sex_exposed$doxypepct_oral[sex_exposed$SY_ORAL==1] + sex_exposed$doxyprepct_oral[sex_exposed$SY_ORAL==1])==0 & sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]==1, 1, sex_exposed$newSY_ORAL_TYPE[sex_exposed$SY_ORAL==1])
-          sex_exposed$partnewSY_ORAL[sex_exposed$SY_ORAL==1] = ifelse((sex_exposed$partcondct_sy_oral[sex_exposed$SY_ORAL==1] + sex_exposed$partdoxypepct_oral[sex_exposed$SY_ORAL==1] + sex_exposed$partdoxyprepct_oral[sex_exposed$SY_ORAL==1])==0 & sex_exposed$partinfection_sy_oral[sex_exposed$SY_ORAL==1]>=1, sex_exposed$partinfection_sy_oral[sex_exposed$SY_ORAL==1], sex_exposed$partnewSY_ORAL[sex_exposed$SY_ORAL==1])
-          sex_exposed$partnewSY_ORAL_TYPE[sex_exposed$SY_ORAL==1] = ifelse((sex_exposed$partcondct_sy_oral[sex_exposed$SY_ORAL==1] + sex_exposed$partdoxypepct_oral[sex_exposed$SY_ORAL==1] + sex_exposed$partdoxyprepct_oral[sex_exposed$SY_ORAL==1])==0 & sex_exposed$partinfection_sy_oral[sex_exposed$SY_ORAL==1]==1, 1, sex_exposed$partnewSY_ORAL_TYPE[sex_exposed$SY_ORAL==1])
-          sex_exposed$prevct_sy_oral[sex_exposed$SY_ORAL==1] = ifelse((sex_exposed$condct_sy_oral[sex_exposed$SY_ORAL==1] + sex_exposed$doxypepct_oral[sex_exposed$SY_ORAL==1] + sex_exposed$doxyprepct_oral[sex_exposed$SY_ORAL==1])>0 & sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]>=1, 1, sex_exposed$prevct_sy_oral[sex_exposed$SY_ORAL==1])
-          sex_exposed$partprevct_sy_oral[sex_exposed$SY_ORAL==1] = ifelse((sex_exposed$partcondct_sy_oral[sex_exposed$SY_ORAL==1] + sex_exposed$partdoxypepct_oral[sex_exposed$SY_ORAL==1] + sex_exposed$partdoxyprepct_oral[sex_exposed$SY_ORAL==1])>0 & sex_exposed$partinfection_sy_oral[sex_exposed$SY_ORAL==1]>=1, 1, sex_exposed$partprevct_sy_oral[sex_exposed$SY_ORAL==1])
+          sex_exposed$newSY_ORAL[sex_exposed$SY_ORAL==1] = ifelse((sex_exposed$condct_sy_oral[sex_exposed$SY_ORAL==1] + sex_exposed$doxyct_oral[sex_exposed$SY_ORAL==1])==0 & sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]>=1, sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1], sex_exposed$newSY_ORAL[sex_exposed$SY_ORAL==1])
+          sex_exposed$newSY_ORAL_TYPE[sex_exposed$SY_ORAL==1] = ifelse((sex_exposed$condct_sy_oral[sex_exposed$SY_ORAL==1] + sex_exposed$doxyct_oral[sex_exposed$SY_ORAL==1])==0 & sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]==1, 1, sex_exposed$newSY_ORAL_TYPE[sex_exposed$SY_ORAL==1])
+          sex_exposed$prevct_sy_oral[sex_exposed$SY_ORAL==1] = ifelse((sex_exposed$condct_sy_oral[sex_exposed$SY_ORAL==1] + sex_exposed$doxyct_oral[sex_exposed$SY_ORAL==1])>0 & sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]>=1, 1, sex_exposed$prevct_sy_oral[sex_exposed$SY_ORAL==1])
+          sex_exposed$partnewSY_ORAL[sex_exposed$SY_ORAL==1] = ifelse((sex_exposed$partcondct_sy_oral[sex_exposed$SY_ORAL==1] + sex_exposed$partdoxyct_oral[sex_exposed$SY_ORAL==1])==0 & sex_exposed$partinfection_sy_oral[sex_exposed$SY_ORAL==1]>=1, sex_exposed$partinfection_sy_oral[sex_exposed$SY_ORAL==1], sex_exposed$partnewSY_ORAL[sex_exposed$SY_ORAL==1])
+          sex_exposed$partnewSY_ORAL_TYPE[sex_exposed$SY_ORAL==1] = ifelse((sex_exposed$partcondct_sy_oral[sex_exposed$SY_ORAL==1] + sex_exposed$partdoxyct_oral[sex_exposed$SY_ORAL==1])==0 & sex_exposed$partinfection_sy_oral[sex_exposed$SY_ORAL==1]==1, 1, sex_exposed$partnewSY_ORAL_TYPE[sex_exposed$SY_ORAL==1])
+          sex_exposed$partprevct_sy_oral[sex_exposed$SY_ORAL==1] = ifelse((sex_exposed$partcondct_sy_oral[sex_exposed$SY_ORAL==1] + sex_exposed$partdoxyct_oral[sex_exposed$SY_ORAL==1])>0 & sex_exposed$partinfection_sy_oral[sex_exposed$SY_ORAL==1]>=1, 1, sex_exposed$partprevct_sy_oral[sex_exposed$SY_ORAL==1])
           
           
           ## UPDATE STATS IN MAIN DATASET ##
@@ -788,15 +785,11 @@ for (sims in 1:nsims)
           abm_sims[[current_data]]$SERO_PREVENT[exposed_sy_anal_ego] = abm_sims[[current_data]]$SERO_PREVENT[exposed_sy_anal_ego] + sex_exposed$seroct_sy[sex_exposed$SY_ANAL==1]
           abm_sims[[current_data]]$SERO_PREVENT[exposed_sy_anal_partner] = abm_sims[[current_data]]$SERO_PREVENT[exposed_sy_anal_partner] + sex_exposed$partseroct_sy[sex_exposed$SY_ANAL==1]
           # mistake in earlier part of code: change NA to 0 
-          abm_sims[[current_data]]$DOXYPREP_PREVENT_ANAL[exposed_sy_anal_ego] = ifelse(is.na(abm_sims[[current_data]]$DOXYPREP_PREVENT_ANAL[exposed_sy_anal_ego]), 0 , abm_sims[[current_data]]$DOXYPREP_PREVENT_ANAL[exposed_sy_anal_ego])
-          abm_sims[[current_data]]$DOXYPREP_PREVENT_ANAL[exposed_sy_anal_partner] = ifelse(is.na(abm_sims[[current_data]]$DOXYPREP_PREVENT_ANAL[exposed_sy_anal_partner]), 0, abm_sims[[current_data]]$DOXYPREP_PREVENT_ANAL[exposed_sy_anal_partner])
-          abm_sims[[current_data]]$DOXYPEP_PREVENT_ANAL[exposed_sy_anal_ego] = ifelse(is.na(abm_sims[[current_data]]$DOXYPEP_PREVENT_ANAL[exposed_sy_anal_ego]),0,abm_sims[[current_data]]$DOXYPEP_PREVENT_ANAL[exposed_sy_anal_ego])
-          abm_sims[[current_data]]$DOXYPEP_PREVENT_ANAL[exposed_sy_anal_partner] = ifelse(is.na(abm_sims[[current_data]]$DOXYPEP_PREVENT_ANAL[exposed_sy_anal_partner]),0,abm_sims[[current_data]]$DOXYPEP_PREVENT_ANAL[exposed_sy_anal_partner])
+          abm_sims[[current_data]]$DOXY_PREVENT_ANAL[exposed_sy_anal_ego] = ifelse(is.na(abm_sims[[current_data]]$DOXY_PREVENT_ANAL[exposed_sy_anal_ego]), 0 , abm_sims[[current_data]]$DOXY_PREVENT_ANAL[exposed_sy_anal_ego])
+          abm_sims[[current_data]]$DOXY_PREVENT_ANAL[exposed_sy_anal_partner] = ifelse(is.na(abm_sims[[current_data]]$DOXY_PREVENT_ANAL[exposed_sy_anal_partner]), 0, abm_sims[[current_data]]$DOXY_PREVENT_ANAL[exposed_sy_anal_partner])
           # update new prevented infections
-          abm_sims[[current_data]]$DOXYPEP_PREVENT_ANAL[exposed_sy_anal_ego] = abm_sims[[current_data]]$DOXYPEP_PREVENT_ANAL[exposed_sy_anal_ego] + sex_exposed$doxypepct_anal[sex_exposed$SY_ANAL==1]
-          abm_sims[[current_data]]$DOXYPEP_PREVENT_ANAL[exposed_sy_anal_partner] = abm_sims[[current_data]]$DOXYPEP_PREVENT_ANAL[exposed_sy_anal_partner] + sex_exposed$partdoxypepct_anal[sex_exposed$SY_ANAL==1]
-          abm_sims[[current_data]]$DOXYPREP_PREVENT_ANAL[exposed_sy_anal_ego] = abm_sims[[current_data]]$DOXYPREP_PREVENT_ANAL[exposed_sy_anal_ego] + sex_exposed$doxyprepct_anal[sex_exposed$SY_ANAL==1]  
-          abm_sims[[current_data]]$DOXYPREP_PREVENT_ANAL[exposed_sy_anal_partner] = abm_sims[[current_data]]$DOXYPREP_PREVENT_ANAL[exposed_sy_anal_partner] + sex_exposed$partdoxyprepct_anal[sex_exposed$SY_ANAL==1]
+          abm_sims[[current_data]]$DOXY_PREVENT_ANAL[exposed_sy_anal_ego] = abm_sims[[current_data]]$DOXY_PREVENT_ANAL[exposed_sy_anal_ego] + sex_exposed$doxyct_anal[sex_exposed$SY_ANAL==1]
+          abm_sims[[current_data]]$DOXY_PREVENT_ANAL[exposed_sy_anal_partner] = abm_sims[[current_data]]$DOXY_PREVENT_ANAL[exposed_sy_anal_partner] + sex_exposed$partdoxyct_anal[sex_exposed$SY_ANAL==1]
           abm_sims[[current_data]]$OVERALL_PREVENT_ANAL[exposed_sy_anal_ego] = abm_sims[[current_data]]$OVERALL_PREVENT_ANAL[exposed_sy_anal_ego] + sex_exposed$prevct_sy_anal[sex_exposed$SY_ANAL==1]
           abm_sims[[current_data]]$OVERALL_PREVENT_ANAL[exposed_sy_anal_partner] = abm_sims[[current_data]]$OVERALL_PREVENT_ANAL[exposed_sy_anal_partner] + sex_exposed$partprevct_sy_anal[sex_exposed$SY_ANAL==1]
           abm_sims[[current_data]]$SY_ANAL[exposed_sy_anal_ego] = ifelse(sex_exposed$newSY_ANAL[sex_exposed$SY_ANAL==1]==1, 1, abm_sims[[current_data]]$SY_ANAL[exposed_sy_anal_ego])
@@ -810,15 +803,11 @@ for (sims in 1:nsims)
           abm_sims[[current_data]]$COND_PREVENT_ORAL[exposed_sy_oral_ego] = abm_sims[[current_data]]$COND_PREVENT_ORAL[exposed_sy_oral_ego] + sex_exposed$condct_sy_oral[sex_exposed$SY_ORAL==1]
           abm_sims[[current_data]]$COND_PREVENT_ORAL[exposed_sy_oral_partner] = abm_sims[[current_data]]$COND_PREVENT_ORAL[exposed_sy_oral_partner] + sex_exposed$partcondct_sy_oral[sex_exposed$SY_ORAL==1]
           # mistake in earlier part of code: change NA to 0 
-          abm_sims[[current_data]]$DOXYPREP_PREVENT_ORAL[exposed_sy_oral_ego] = ifelse(is.na(abm_sims[[current_data]]$DOXYPREP_PREVENT_ORAL[exposed_sy_oral_ego]), 0 , abm_sims[[current_data]]$DOXYPREP_PREVENT_ORAL[exposed_sy_oral_ego])
-          abm_sims[[current_data]]$DOXYPREP_PREVENT_ORAL[exposed_sy_oral_partner] = ifelse(is.na(abm_sims[[current_data]]$DOXYPREP_PREVENT_ORAL[exposed_sy_oral_partner]), 0, abm_sims[[current_data]]$DOXYPREP_PREVENT_ORAL[exposed_sy_oral_partner])
-          abm_sims[[current_data]]$DOXYPEP_PREVENT_ORAL[exposed_sy_oral_ego] = ifelse(is.na(abm_sims[[current_data]]$DOXYPEP_PREVENT_ORAL[exposed_sy_oral_ego]),0,abm_sims[[current_data]]$DOXYPEP_PREVENT_ORAL[exposed_sy_oral_ego])
-          abm_sims[[current_data]]$DOXYPEP_PREVENT_ORAL[exposed_sy_oral_partner] = ifelse(is.na(abm_sims[[current_data]]$DOXYPEP_PREVENT_ORAL[exposed_sy_oral_partner]),0,abm_sims[[current_data]]$DOXYPEP_PREVENT_ORAL[exposed_sy_oral_partner])
+          abm_sims[[current_data]]$DOXY_PREVENT_ORAL[exposed_sy_oral_ego] = ifelse(is.na(abm_sims[[current_data]]$DOXY_PREVENT_ORAL[exposed_sy_oral_ego]), 0 , abm_sims[[current_data]]$DOXY_PREVENT_ORAL[exposed_sy_oral_ego])
+          abm_sims[[current_data]]$DOXY_PREVENT_ORAL[exposed_sy_oral_partner] = ifelse(is.na(abm_sims[[current_data]]$DOXY_PREVENT_ORAL[exposed_sy_oral_partner]), 0, abm_sims[[current_data]]$DOXY_PREVENT_ORAL[exposed_sy_oral_partner])
           # update new prevented infections
-          abm_sims[[current_data]]$DOXYPEP_PREVENT_ORAL[exposed_sy_oral_ego] = abm_sims[[current_data]]$DOXYPEP_PREVENT_ORAL[exposed_sy_oral_ego] + sex_exposed$doxypepct_oral[sex_exposed$SY_ORAL==1]
-          abm_sims[[current_data]]$DOXYPEP_PREVENT_ORAL[exposed_sy_oral_partner] = abm_sims[[current_data]]$DOXYPEP_PREVENT_ORAL[exposed_sy_oral_partner] + sex_exposed$partdoxypepct_oral[sex_exposed$SY_ORAL==1]
-          abm_sims[[current_data]]$DOXYPREP_PREVENT_ORAL[exposed_sy_oral_ego] = abm_sims[[current_data]]$DOXYPREP_PREVENT_ORAL[exposed_sy_oral_ego] + sex_exposed$doxyprepct_oral[sex_exposed$SY_ORAL==1]
-          abm_sims[[current_data]]$DOXYPREP_PREVENT_ORAL[exposed_sy_oral_partner] = abm_sims[[current_data]]$DOXYPREP_PREVENT_ORAL[exposed_sy_oral_partner] + sex_exposed$partdoxyprepct_oral[sex_exposed$SY_ORAL==1]
+          abm_sims[[current_data]]$DOXY_PREVENT_ORAL[exposed_sy_oral_ego] = abm_sims[[current_data]]$DOXY_PREVENT_ORAL[exposed_sy_oral_ego] + sex_exposed$doxyct_oral[sex_exposed$SY_ORAL==1]
+          abm_sims[[current_data]]$DOXY_PREVENT_ORAL[exposed_sy_oral_partner] = abm_sims[[current_data]]$DOXY_PREVENT_ORAL[exposed_sy_oral_partner] + sex_exposed$partdoxyct_oral[sex_exposed$SY_ORAL==1]
           abm_sims[[current_data]]$OVERALL_PREVENT_ORAL[exposed_sy_oral_ego] = abm_sims[[current_data]]$OVERALL_PREVENT_ORAL[exposed_sy_oral_ego] + sex_exposed$prevct_sy_oral[sex_exposed$SY_ORAL==1]
           abm_sims[[current_data]]$OVERALL_PREVENT_ORAL[exposed_sy_oral_partner] = abm_sims[[current_data]]$OVERALL_PREVENT_ORAL[exposed_sy_oral_partner] + sex_exposed$partprevct_sy_oral[sex_exposed$SY_ORAL==1]
           abm_sims[[current_data]]$SY_ORAL[exposed_sy_oral_ego] = ifelse(sex_exposed$newSY_ORAL[sex_exposed$SY_ORAL==1]==1 | sex_exposed$newSY_ORAL[sex_exposed$SY_ORAL==1]==3, 1, abm_sims[[current_data]]$SY_ORAL[exposed_sy_oral_ego])
@@ -1359,12 +1348,12 @@ save.image("simulation results_25sims.RData")
 
 
 ### STEP5.2: CALIBRATION - Syphilis Simulation ###
-library(ggplot2); library(ggpubr)
+library(ggplot2); library(ggpubr); library(directlabels)
 load("simulation results_25sims.RData")
 
 #create an annual HIV incidence dataframe
 annual_hiv = data.frame(matrix(data=NA, nrow=0, ncol=(length_sim/365)), stringsAsFactors=F)
-for (i in seq(2,nsims*nparadigms,by=nparadigms))
+for (i in seq(1,nsims*nparadigms,by=nparadigms))
 {
   long_sims_50[[i]]$YEAR = (floor((long_sims_50[[i]]$DAY-1)/365) + 1)
   annual_hiv = rbind(annual_hiv, matrix(data=as.numeric(by(long_sims_50[[i]]$HIV, long_sims_50[[i]]$YEAR, FUN=sum)), nrow=1, ncol=length(unique(long_sims_50[[i]]$YEAR))))
@@ -1374,139 +1363,90 @@ rm(i)
 
 colMeans(annual_hiv)
 
-# hiv calibration
-surveillance = c(302,285,303,323,288,310,268,272,207)
-annual_hiv1 = annual_hiv[,c(2:10)]
-simulation = colMeans(annual_hiv[,c(2:10)])
-ll = numeric(9)
-for (i in 1:length(ll)) {
-  ll[i] = quantile(annual_hiv1[,i], 0.025)
-}
-ul = numeric(9)
-for (i in 1:length(ul)) {
-  ul[i] = quantile(annual_hiv1[,i], 0.975)
-}
-
-hivdat = data.frame(years=rep(2010:2018), group=c(rep("Simulated",9),rep("Surveillance",9)), estimates=c(simulation,surveillance))
-hivdat$ll = c(ll,rep(NA,9))
-hivdat$ul = c(ul,rep(NA,9))
-
-# hiv calibration plot
-c1 = ggplot(hivdat, aes(years, estimates, linetype = group, shape = group)) +
-  geom_line() +
-  scale_linetype_manual(values=c("longdash", "solid")) +
-  geom_point(size = 2) + 
-  scale_shape_manual(values = c(1,16)) +
-  geom_pointrange(data = hivdat, aes(ymin=ll, ymax=ul), width = 0.1, linetype = "solid") +
-  ylab("Reported Cases") +
-  xlab("Surveillance Years") +
-  coord_cartesian(ylim = c(0, 600)) +
-  ggtitle("HIV Calibration Results") +
-  theme_bw() +
-  theme(text = element_text(color = "#22211d", size = 10),legend.text=element_text(size=13), plot.title = element_text(size = 15, face = "bold"), 
-        axis.title = element_text(size = 13), axis.text = element_text(size = 10), legend.title = element_blank()) 
-
-
-#create an annual anal syphilis incidence dataframe
-annual_sy_anal = data.frame(matrix(data=NA, nrow=0, ncol=(length_sim/365)), stringsAsFactors=F)
-for (i in seq(2,nsims*nparadigms,by=nparadigms))
+#create an annual syphilis incidence dataframe
+annual_sy = data.frame(matrix(data=NA, nrow=0, ncol=(length_sim/365)), stringsAsFactors=F)
+for (i in seq(1,nsims*nparadigms,by=nparadigms))
 {
   long_sims_50[[i]]$YEAR = (floor((long_sims_50[[i]]$DAY-1)/365) + 1)
-  annual_sy_anal = rbind(annual_sy_anal, matrix(data=as.numeric(by(long_sims_50[[i]]$SY_ANAL, long_sims_50[[i]]$YEAR, FUN=sum)), nrow=1, ncol=length(unique(long_sims_50[[i]]$YEAR))))
-  
+  annual_sy = rbind(annual_sy, matrix(data=as.numeric(by(rowSums(cbind(long_sims_50[[i]]$SY_ORAL, long_sims_50[[i]]$SY_ANAL)), long_sims_50[[i]]$YEAR, FUN=sum)), nrow=1, ncol=length(unique(long_sims_50[[i]]$YEAR))))
 }
 rm(i)
 
-colMeans(annual_sy_anal)
-
-#create an annual anal syphilis incidence dataframe
-annual_sy_oral = data.frame(matrix(data=NA, nrow=0, ncol=(length_sim/365)), stringsAsFactors=F)
-for (i in seq(2,nsims*nparadigms,by=nparadigms))
-{
-  long_sims_50[[i]]$YEAR = (floor((long_sims_50[[i]]$DAY-1)/365) + 1)
-  annual_sy_oral = rbind(annual_sy_oral, matrix(data=as.numeric(by(long_sims_50[[i]]$SY_ORAL, long_sims_50[[i]]$YEAR, FUN=sum)), nrow=1, ncol=length(unique(long_sims_50[[i]]$YEAR))))
-  
-}
-rm(i)
-
-colMeans(annual_sy_oral)
-
-#sum annual anal and oral syphilis 
-annual_sy = annual_sy_anal + annual_sy_oral
 colMeans(annual_sy)
 
-# syphilis calibration 
-surveillance1 = c(218,217,268,248,252,416,568,659,626)
-annual_sy1 = annual_sy[,c(2:10)]
-simulation1 = colMeans(annual_sy[,c(2:10)])
-ll1 = numeric(9)
-for (i in 1:length(ll1)) {
-  ll1[i] = quantile(annual_sy1[,i], 0.025)
-}
-ul1 = numeric(9)
-for (i in 1:length(ul1)) {
-  ul1[i] = quantile(annual_sy1[,i], 0.975)
+# subset calibration data for plotting
+hiv_calibrate = annual_hiv[,c(1:9)]
+sy_calibrate = annual_sy[,c(1:9)]
+
+# initialize necessary estimates for plotting
+hiv_sur = c(305,286,304,328,288,313,271,278,215)
+hiv_sim = colMeans(hiv_calibrate)
+hiv_ll = numeric(9)
+hiv_ul = numeric(9)
+sy_sur = c(218,217,268,248,252,416,568,659,626)
+sy_sim = colMeans(sy_calibrate)
+sy_ll = numeric(9)
+sy_ul = numeric(9)
+for (i in 1:length(hiv_ll)) {
+  hiv_ll[i] = quantile(hiv_calibrate[,i], 0.025)
+  hiv_ul[i] = quantile(hiv_calibrate[,i], 0.975)
+  sy_ll[i] = quantile(sy_calibrate[,i], 0.025)
+  sy_ul[i] = quantile(sy_calibrate[,i], 0.975)
 }
 
-sydat = data.frame(years=rep(2010:2018), group=c(rep("Simulated",9),rep("Surveillance",9)), estimates=c(simulation1,surveillance1))
-sydat$ll1 = c(ll1,rep(NA,9))
-sydat$ul1 = c(ul1,rep(NA,9))
+# calibration dataframe 
+dta_calibrate = data.frame(years=rep(2010:2018), group=rep(c("Simulated","Surveillance"), each=9, length=36), sti=rep(c("HIV","Syphilis"), each=18), estimates=c(hiv_sim, hiv_sur, sy_sim, sy_sur), ll = c(hiv_ll, rep(NA, 9), sy_ll, rep(NA, 9)), ul = c(hiv_ul, rep(NA, 9), sy_ul, rep(NA, 9)))
 
-# syphilis calibration plot
-c2 = ggplot(sydat, aes(years, estimates, linetype = group, shape = group)) +
+# calibration plot 
+c_plot = ggplot(dta_calibrate, aes(years, estimates, linetype = group, shape = group)) +
   geom_line() +
   scale_linetype_manual(values=c("longdash", "solid")) +
   geom_point(size = 2) + 
   scale_shape_manual(values = c(1,16)) +
-  geom_pointrange(data = sydat, aes(ymin=ll1, ymax=ul1), width = 0.1) +
+  geom_pointrange(data = dta_calibrate, aes(ymin=ll, ymax=ul), width = 0.1) +
   ylab("Reported Cases") +
   xlab("Surveillance Years") +
-  coord_cartesian(ylim = c(0, 1100)) +
-  ggtitle("Syphilis Calibration Results") +
+  coord_cartesian(ylim = c(0, 875)) +
+  scale_x_continuous(breaks = 0:2100) +
+  facet_wrap(~sti, scales = "free") +
   theme_bw() +
-  theme(text = element_text(color = "#22211d", size = 10),legend.text=element_text(size=13), plot.title = element_text(size = 15, face = "bold"), 
-        axis.title = element_text(size = 13), axis.text = element_text(size = 10), legend.title = element_blank()) 
+  theme(text = element_text(color = "#22211d", size = 12),legend.text=element_text(size=12), plot.title = element_text(size = 12, face = "bold"), 
+        axis.title = element_text(size = 12), axis.text = element_text(size = 12), legend.title = element_blank(),legend.position = "top") 
 
-# FIG 1. Calibration plots
-c3 = ggarrange(c1, c2, ncol=2, nrow=1, labels = c("A", "B"), common.legend = TRUE, legend="top") 
-ggsave("calibration_plot.jpeg", plot=c3, width = 10, height = 4, units = "in", dpi = 1200)
+ggsave("calibration_plot.jpeg", plot=c_plot, width = 9.5, height = 5, units = "in", dpi = 1200)
 
 # clean up environment 
-rm(c1,c2,c3, annual_hiv, annual_hiv1, annual_sy, annual_sy_anal, annual_sy_oral, annual_sy1, hivdat, sydat, i, ll, ll1, ul, ul1, simulation, simulation1, surveillance, surveillance1)
+rm(c_plot, annual_hiv, annual_sy, hiv_calibrate, sy_calibrate, dta_calibrate, i, hiv_ll, hiv_ul, sy_ll, sy_ul, hiv_sim, hiv_sur, sy_sim, sy_sur)
 
 
 ### STEP6. Cumulative incidence Estimation ###
-# Separate abm_sims and long_sims into respective doxy PrEP and PEP scenarios 
-abm_sims_prep = c(abm_sims_50[c(1:6,14:19,27:32,40:45,53:58,66:71,79:84,92:97,105:110,118:123,
-                                131:136,144:149,157:162,170:175,183:188,196:201,209:214,222:227,
-                                235:240,248:253,261:266,274:279,287:292,300:305,313:318)+1])
+# Separate abm_sims and long_sims into respective doxy uptake scenarios 
+abm_sims_20 = c(abm_sims_50[rep(c(TRUE, FALSE), c(6, 20))])
+abm_sims_40 = c(abm_sims_50[rep(c(TRUE, FALSE, TRUE, FALSE), c(1, 5, 5, 15))])
+abm_sims_60 = c(abm_sims_50[rep(c(TRUE, FALSE, TRUE, FALSE), c(1, 10, 5, 10))])
+abm_sims_80 = c(abm_sims_50[rep(c(TRUE, FALSE, TRUE, FALSE), c(1, 15, 5, 5))])
+abm_sims_100 = c(abm_sims_50[rep(c(TRUE, FALSE, TRUE), c(1, 20, 5))])
 
-abm_sims_pep = c(abm_sims_50[c(8:13,21:26,34:39,47:52,60:65,73:78,86:91,99:104,112:117,125:130,
-                               138:143,151:156,164:169,177:182,190:195,203:208,216:221,229:234,
-                               242:247,255:260,268:273,281:286,294:299,307:312,320:325)])
-
-long_sims_prep = c(long_sims_50[c(1:6,14:19,27:32,40:45,53:58,66:71,79:84,92:97,105:110,118:123,
-                                  131:136,144:149,157:162,170:175,183:188,196:201,209:214,222:227,
-                                  235:240,248:253,261:266,274:279,287:292,300:305,313:318)+1])
-
-long_sims_pep = c(long_sims_50[c(8:13,21:26,34:39,47:52,60:65,73:78,86:91,99:104,112:117,125:130,
-                                 138:143,151:156,164:169,177:182,190:195,203:208,216:221,229:234,
-                                 242:247,255:260,268:273,281:286,294:299,307:312,320:325)])
+long_sims_20 = c(long_sims_50[rep(c(TRUE, FALSE), c(6, 20))])
+long_sims_40 = c(long_sims_50[rep(c(TRUE, FALSE, TRUE, FALSE), c(1, 5, 5, 15))])
+long_sims_60 = c(long_sims_50[rep(c(TRUE, FALSE, TRUE, FALSE), c(1, 10, 5, 10))])
+long_sims_80 = c(long_sims_50[rep(c(TRUE, FALSE, TRUE, FALSE), c(1, 15, 5, 5))])
+long_sims_100 = c(long_sims_50[rep(c(TRUE, FALSE, TRUE), c(1, 20, 5))])
 
 
 ### Cumulative incidence 
 
-paradigm = 1:2
-uptake_level = c(0,10,20,30,40,50)
+uptake = c(20,40,60,80,100)
+adhere = c(0,20,40,60,80,100)
 day = 365.24
 
-analwide = data.frame("Paradigm"=NA,"Uptake_level"=NA,"yr1"=NA,"yr2"=NA,"yr3"=NA,"yr4"=NA,"yr5"=NA,"yr6"=NA,"yr7"=NA,"yr8"=NA,"yr9"=NA,"yr10"=NA,stringsAsFactors=F)
-oralwide = data.frame("Paradigm"=NA,"Uptake_level"=NA,"yr1"=NA,"yr2"=NA,"yr3"=NA,"yr4"=NA,"yr5"=NA,"yr6"=NA,"yr7"=NA,"yr8"=NA,"yr9"=NA,"yr10"=NA,stringsAsFactors=F)
+analwide = data.frame("Uptake"=NA,"Adhere"=NA,"yr1"=NA,"yr2"=NA,"yr3"=NA,"yr4"=NA,"yr5"=NA,"yr6"=NA,"yr7"=NA,"yr8"=NA,"yr9"=NA,"yr10"=NA,stringsAsFactors=F)
+oralwide = data.frame("Uptake"=NA,"Adhere"=NA,"yr1"=NA,"yr2"=NA,"yr3"=NA,"yr4"=NA,"yr5"=NA,"yr6"=NA,"yr7"=NA,"yr8"=NA,"yr9"=NA,"yr10"=NA,stringsAsFactors=F)
+dtawide = data.frame("Uptake"=NA,"Adhere"=NA,"yr1"=NA,"yr2"=NA,"yr3"=NA,"yr4"=NA,"yr5"=NA,"yr6"=NA,"yr7"=NA,"yr8"=NA,"yr9"=NA,"yr10"=NA,stringsAsFactors=F)
 
-
-for (i in 1:length(paradigm))
+for (i in 1:length(uptake))
 {
-  for (j in 1:length(uptake_level))
+  for (j in 1:length(adhere))
   {
     # anal
     stat_yr1_new_anal = NA           #1 yr new infections
@@ -1530,57 +1470,192 @@ for (i in 1:length(paradigm))
     stat_yr8_new_oral = NA           #8 yr new infections
     stat_yr9_new_oral = NA           #9 yr new infections
     stat_yr10_new_oral = NA          #10 yr new infections
+    # anal + oral infections 
+    stat_yr1_new = NA           #1 yr new infections
+    stat_yr2_new = NA           #2 yr new infections
+    stat_yr3_new = NA           #3 yr new infections
+    stat_yr4_new = NA           #4 yr new infections
+    stat_yr5_new = NA           #5 yr new infections
+    stat_yr6_new = NA           #6 yr new infections
+    stat_yr7_new = NA           #7 yr new infections
+    stat_yr8_new = NA           #8 yr new infections
+    stat_yr9_new = NA           #9 yr new infections
+    stat_yr10_new = NA          #10 yr new infections
     
     for (k in 0:(nsims-1))
     {
-      current = k*length(uptake_level)
+      current = k*length(adhere)
       
-      if (paradigm[i]==1) {
-        # DOXY PREP
-        stat_yr1_new_anal = c(stat_yr1_new_anal, (sum(long_sims_prep[[j+current]]$SY_ANAL[(365*9+1):(365*10)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*11))))
-        stat_yr2_new_anal = c(stat_yr2_new_anal, (sum(long_sims_prep[[j+current]]$SY_ANAL[(365*9+1):(365*11)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*12))))
-        stat_yr3_new_anal = c(stat_yr3_new_anal, (sum(long_sims_prep[[j+current]]$SY_ANAL[(365*9+1):(365*12)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*13))))
-        stat_yr4_new_anal = c(stat_yr4_new_anal, (sum(long_sims_prep[[j+current]]$SY_ANAL[(365*9+1):(365*13)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*14))))
-        stat_yr5_new_anal = c(stat_yr5_new_anal, (sum(long_sims_prep[[j+current]]$SY_ANAL[(365*9+1):(365*14)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*15))))
-        stat_yr6_new_anal = c(stat_yr6_new_anal, (sum(long_sims_prep[[j+current]]$SY_ANAL[(365*9+1):(365*15)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*16))))
-        stat_yr7_new_anal = c(stat_yr7_new_anal, (sum(long_sims_prep[[j+current]]$SY_ANAL[(365*9+1):(365*16)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*17))))
-        stat_yr8_new_anal = c(stat_yr8_new_anal, (sum(long_sims_prep[[j+current]]$SY_ANAL[(365*9+1):(365*17)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*18))))
-        stat_yr9_new_anal = c(stat_yr9_new_anal, (sum(long_sims_prep[[j+current]]$SY_ANAL[(365*9+1):(365*18)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*19))))
-        stat_yr10_new_anal = c(stat_yr10_new_anal, (sum(long_sims_prep[[j+current]]$SY_ANAL[(365*9+1):(365*19)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*20))))
+      if (uptake[i]==20) {
+        # 20% Doxy Uptake
+        stat_yr1_new_anal = c(stat_yr1_new_anal, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new_anal = c(stat_yr2_new_anal, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new_anal = c(stat_yr3_new_anal, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new_anal = c(stat_yr4_new_anal, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new_anal = c(stat_yr5_new_anal, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new_anal = c(stat_yr6_new_anal, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new_anal = c(stat_yr7_new_anal, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new_anal = c(stat_yr8_new_anal, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new_anal = c(stat_yr9_new_anal, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new_anal = c(stat_yr10_new_anal, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*20))))
         
-        stat_yr1_new_oral = c(stat_yr1_new_oral, (sum(long_sims_prep[[j+current]]$SY_ORAL[(365*9+1):(365*10)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*11))))
-        stat_yr2_new_oral = c(stat_yr2_new_oral, (sum(long_sims_prep[[j+current]]$SY_ORAL[(365*9+1):(365*11)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*12))))
-        stat_yr3_new_oral = c(stat_yr3_new_oral, (sum(long_sims_prep[[j+current]]$SY_ORAL[(365*9+1):(365*12)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*13))))
-        stat_yr4_new_oral = c(stat_yr4_new_oral, (sum(long_sims_prep[[j+current]]$SY_ORAL[(365*9+1):(365*13)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*14))))
-        stat_yr5_new_oral = c(stat_yr5_new_oral, (sum(long_sims_prep[[j+current]]$SY_ORAL[(365*9+1):(365*14)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*15))))
-        stat_yr6_new_oral = c(stat_yr6_new_oral, (sum(long_sims_prep[[j+current]]$SY_ORAL[(365*9+1):(365*15)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*16))))
-        stat_yr7_new_oral = c(stat_yr7_new_oral, (sum(long_sims_prep[[j+current]]$SY_ORAL[(365*9+1):(365*16)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*17))))
-        stat_yr8_new_oral = c(stat_yr8_new_oral, (sum(long_sims_prep[[j+current]]$SY_ORAL[(365*9+1):(365*17)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*18))))
-        stat_yr9_new_oral = c(stat_yr9_new_oral, (sum(long_sims_prep[[j+current]]$SY_ORAL[(365*9+1):(365*18)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*19))))
-        stat_yr10_new_oral = c(stat_yr10_new_oral, (sum(long_sims_prep[[j+current]]$SY_ORAL[(365*9+1):(365*19)]) / (nagents_start + (((nrow(abm_sims_prep[[j+current]]) - nagents_start)/(length_sim/day))*20))))
-      } else if (paradigm[i]==2) {
-        # DOXY PEP 
-        stat_yr1_new_anal = c(stat_yr1_new_anal, (sum(long_sims_pep[[j+current]]$SY_ANAL[(365*9+1):(365*10)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*11))))
-        stat_yr2_new_anal = c(stat_yr2_new_anal, (sum(long_sims_pep[[j+current]]$SY_ANAL[(365*9+1):(365*11)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*12))))
-        stat_yr3_new_anal = c(stat_yr3_new_anal, (sum(long_sims_pep[[j+current]]$SY_ANAL[(365*9+1):(365*12)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*13))))
-        stat_yr4_new_anal = c(stat_yr4_new_anal, (sum(long_sims_pep[[j+current]]$SY_ANAL[(365*9+1):(365*13)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*14))))
-        stat_yr5_new_anal = c(stat_yr5_new_anal, (sum(long_sims_pep[[j+current]]$SY_ANAL[(365*9+1):(365*14)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*15))))
-        stat_yr6_new_anal = c(stat_yr6_new_anal, (sum(long_sims_pep[[j+current]]$SY_ANAL[(365*9+1):(365*15)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*16))))
-        stat_yr7_new_anal = c(stat_yr7_new_anal, (sum(long_sims_pep[[j+current]]$SY_ANAL[(365*9+1):(365*16)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*17))))
-        stat_yr8_new_anal = c(stat_yr8_new_anal, (sum(long_sims_pep[[j+current]]$SY_ANAL[(365*9+1):(365*17)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*18))))
-        stat_yr9_new_anal = c(stat_yr9_new_anal, (sum(long_sims_pep[[j+current]]$SY_ANAL[(365*9+1):(365*18)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*19))))
-        stat_yr10_new_anal = c(stat_yr10_new_anal, (sum(long_sims_pep[[j+current]]$SY_ANAL[(365*9+1):(365*19)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*20))))
+        stat_yr1_new_oral = c(stat_yr1_new_oral, (sum(long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new_oral = c(stat_yr2_new_oral, (sum(long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new_oral = c(stat_yr3_new_oral, (sum(long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new_oral = c(stat_yr4_new_oral, (sum(long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new_oral = c(stat_yr5_new_oral, (sum(long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new_oral = c(stat_yr6_new_oral, (sum(long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new_oral = c(stat_yr7_new_oral, (sum(long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new_oral = c(stat_yr8_new_oral, (sum(long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new_oral = c(stat_yr9_new_oral, (sum(long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new_oral = c(stat_yr10_new_oral, (sum(long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*20))))
         
-        stat_yr1_new_oral = c(stat_yr1_new_oral, (sum(long_sims_pep[[j+current]]$SY_ORAL[(365*9+1):(365*10)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*11))))
-        stat_yr2_new_oral = c(stat_yr2_new_oral, (sum(long_sims_pep[[j+current]]$SY_ORAL[(365*9+1):(365*11)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*12))))
-        stat_yr3_new_oral = c(stat_yr3_new_oral, (sum(long_sims_pep[[j+current]]$SY_ORAL[(365*9+1):(365*12)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*13))))
-        stat_yr4_new_oral = c(stat_yr4_new_oral, (sum(long_sims_pep[[j+current]]$SY_ORAL[(365*9+1):(365*13)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*14))))
-        stat_yr5_new_oral = c(stat_yr5_new_oral, (sum(long_sims_pep[[j+current]]$SY_ORAL[(365*9+1):(365*14)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*15))))
-        stat_yr6_new_oral = c(stat_yr6_new_oral, (sum(long_sims_pep[[j+current]]$SY_ORAL[(365*9+1):(365*15)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*16))))
-        stat_yr7_new_oral = c(stat_yr7_new_oral, (sum(long_sims_pep[[j+current]]$SY_ORAL[(365*9+1):(365*16)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*17))))
-        stat_yr8_new_oral = c(stat_yr8_new_oral, (sum(long_sims_pep[[j+current]]$SY_ORAL[(365*9+1):(365*17)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*18))))
-        stat_yr9_new_oral = c(stat_yr9_new_oral, (sum(long_sims_pep[[j+current]]$SY_ORAL[(365*9+1):(365*18)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*19))))
-        stat_yr10_new_oral = c(stat_yr10_new_oral, (sum(long_sims_pep[[j+current]]$SY_ORAL[(365*9+1):(365*19)]) / (nagents_start + (((nrow(abm_sims_pep[[j+current]]) - nagents_start)/(length_sim/day))*20))))
+        stat_yr1_new = c(stat_yr1_new, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*10)], long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new = c(stat_yr2_new, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*11)], long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new = c(stat_yr3_new, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*12)], long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new = c(stat_yr4_new, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*13)], long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new = c(stat_yr5_new, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*14)], long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new = c(stat_yr6_new, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*15)], long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new = c(stat_yr7_new, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*16)], long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new = c(stat_yr8_new, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*17)], long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new = c(stat_yr9_new, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*18)], long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new = c(stat_yr10_new, (sum(long_sims_20[[j+current]]$SY_ANAL[(day*9+1):(day*19)], long_sims_20[[j+current]]$SY_ORAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_20[[j+current]]) - nagents_start)/(length_sim/day))*20))))
+      } else if (uptake[i]==40) {
+        # 40% Doxy Uptake 
+        stat_yr1_new_anal = c(stat_yr1_new_anal, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new_anal = c(stat_yr2_new_anal, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new_anal = c(stat_yr3_new_anal, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new_anal = c(stat_yr4_new_anal, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new_anal = c(stat_yr5_new_anal, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new_anal = c(stat_yr6_new_anal, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new_anal = c(stat_yr7_new_anal, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new_anal = c(stat_yr8_new_anal, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new_anal = c(stat_yr9_new_anal, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new_anal = c(stat_yr10_new_anal, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*20))))
+        
+        stat_yr1_new_oral = c(stat_yr1_new_oral, (sum(long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new_oral = c(stat_yr2_new_oral, (sum(long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new_oral = c(stat_yr3_new_oral, (sum(long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new_oral = c(stat_yr4_new_oral, (sum(long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new_oral = c(stat_yr5_new_oral, (sum(long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new_oral = c(stat_yr6_new_oral, (sum(long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new_oral = c(stat_yr7_new_oral, (sum(long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new_oral = c(stat_yr8_new_oral, (sum(long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new_oral = c(stat_yr9_new_oral, (sum(long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new_oral = c(stat_yr10_new_oral, (sum(long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*20))))
+        
+        stat_yr1_new = c(stat_yr1_new, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*10)], long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new = c(stat_yr2_new, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*11)], long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new = c(stat_yr3_new, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*12)], long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new = c(stat_yr4_new, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*13)], long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new = c(stat_yr5_new, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*14)], long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new = c(stat_yr6_new, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*15)], long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new = c(stat_yr7_new, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*16)], long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new = c(stat_yr8_new, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*17)], long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new = c(stat_yr9_new, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*18)], long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new = c(stat_yr10_new, (sum(long_sims_40[[j+current]]$SY_ANAL[(day*9+1):(day*19)], long_sims_40[[j+current]]$SY_ORAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_40[[j+current]]) - nagents_start)/(length_sim/day))*20))))
+      } else if (uptake[i]==60) {
+        # 60% Doxy Uptake
+        stat_yr1_new_anal = c(stat_yr1_new_anal, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new_anal = c(stat_yr2_new_anal, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new_anal = c(stat_yr3_new_anal, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new_anal = c(stat_yr4_new_anal, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new_anal = c(stat_yr5_new_anal, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new_anal = c(stat_yr6_new_anal, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new_anal = c(stat_yr7_new_anal, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new_anal = c(stat_yr8_new_anal, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new_anal = c(stat_yr9_new_anal, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new_anal = c(stat_yr10_new_anal, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*20))))
+        
+        stat_yr1_new_oral = c(stat_yr1_new_oral, (sum(long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new_oral = c(stat_yr2_new_oral, (sum(long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new_oral = c(stat_yr3_new_oral, (sum(long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new_oral = c(stat_yr4_new_oral, (sum(long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new_oral = c(stat_yr5_new_oral, (sum(long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new_oral = c(stat_yr6_new_oral, (sum(long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new_oral = c(stat_yr7_new_oral, (sum(long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new_oral = c(stat_yr8_new_oral, (sum(long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new_oral = c(stat_yr9_new_oral, (sum(long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new_oral = c(stat_yr10_new_oral, (sum(long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*20))))   
+        
+        stat_yr1_new = c(stat_yr1_new, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*10)], long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new = c(stat_yr2_new, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*11)], long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new = c(stat_yr3_new, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*12)], long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new = c(stat_yr4_new, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*13)], long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new = c(stat_yr5_new, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*14)], long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new = c(stat_yr6_new, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*15)], long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new = c(stat_yr7_new, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*16)], long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new = c(stat_yr8_new, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*17)], long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new = c(stat_yr9_new, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*18)], long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new = c(stat_yr10_new, (sum(long_sims_60[[j+current]]$SY_ANAL[(day*9+1):(day*19)], long_sims_60[[j+current]]$SY_ORAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_60[[j+current]]) - nagents_start)/(length_sim/day))*20))))
+      } else if (uptake[i]==80) {
+        # 80% Doxy Uptake 
+        stat_yr1_new_anal = c(stat_yr1_new_anal, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new_anal = c(stat_yr2_new_anal, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new_anal = c(stat_yr3_new_anal, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new_anal = c(stat_yr4_new_anal, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new_anal = c(stat_yr5_new_anal, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new_anal = c(stat_yr6_new_anal, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new_anal = c(stat_yr7_new_anal, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new_anal = c(stat_yr8_new_anal, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new_anal = c(stat_yr9_new_anal, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new_anal = c(stat_yr10_new_anal, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*20))))
+        
+        stat_yr1_new_oral = c(stat_yr1_new_oral, (sum(long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new_oral = c(stat_yr2_new_oral, (sum(long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new_oral = c(stat_yr3_new_oral, (sum(long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new_oral = c(stat_yr4_new_oral, (sum(long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new_oral = c(stat_yr5_new_oral, (sum(long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new_oral = c(stat_yr6_new_oral, (sum(long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new_oral = c(stat_yr7_new_oral, (sum(long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new_oral = c(stat_yr8_new_oral, (sum(long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new_oral = c(stat_yr9_new_oral, (sum(long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new_oral = c(stat_yr10_new_oral, (sum(long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*20))))
+        
+        stat_yr1_new = c(stat_yr1_new, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*10)], long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new = c(stat_yr2_new, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*11)], long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new = c(stat_yr3_new, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*12)], long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new = c(stat_yr4_new, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*13)], long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new = c(stat_yr5_new, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*14)], long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new = c(stat_yr6_new, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*15)], long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new = c(stat_yr7_new, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*16)], long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new = c(stat_yr8_new, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*17)], long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new = c(stat_yr9_new, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*18)], long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new = c(stat_yr10_new, (sum(long_sims_80[[j+current]]$SY_ANAL[(day*9+1):(day*19)], long_sims_80[[j+current]]$SY_ORAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_80[[j+current]]) - nagents_start)/(length_sim/day))*20))))
+      } else if (uptake[i]==100) {
+        # 100% Doxy Uptake
+        stat_yr1_new_anal = c(stat_yr1_new_anal, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new_anal = c(stat_yr2_new_anal, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new_anal = c(stat_yr3_new_anal, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new_anal = c(stat_yr4_new_anal, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new_anal = c(stat_yr5_new_anal, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new_anal = c(stat_yr6_new_anal, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new_anal = c(stat_yr7_new_anal, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new_anal = c(stat_yr8_new_anal, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new_anal = c(stat_yr9_new_anal, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new_anal = c(stat_yr10_new_anal, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*20))))
+        
+        stat_yr1_new_oral = c(stat_yr1_new_oral, (sum(long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new_oral = c(stat_yr2_new_oral, (sum(long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new_oral = c(stat_yr3_new_oral, (sum(long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new_oral = c(stat_yr4_new_oral, (sum(long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new_oral = c(stat_yr5_new_oral, (sum(long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new_oral = c(stat_yr6_new_oral, (sum(long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new_oral = c(stat_yr7_new_oral, (sum(long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new_oral = c(stat_yr8_new_oral, (sum(long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new_oral = c(stat_yr9_new_oral, (sum(long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new_oral = c(stat_yr10_new_oral, (sum(long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*20))))
+        
+        stat_yr1_new = c(stat_yr1_new, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*10)], long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*10)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*11))))
+        stat_yr2_new = c(stat_yr2_new, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*11)], long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*11)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*12))))
+        stat_yr3_new = c(stat_yr3_new, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*12)], long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*12)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*13))))
+        stat_yr4_new = c(stat_yr4_new, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*13)], long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*13)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*14))))
+        stat_yr5_new = c(stat_yr5_new, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*14)], long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*14)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*15))))
+        stat_yr6_new = c(stat_yr6_new, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*15)], long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*15)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*16))))
+        stat_yr7_new = c(stat_yr7_new, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*16)], long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*16)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*17))))
+        stat_yr8_new = c(stat_yr8_new, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*17)], long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*17)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*18))))
+        stat_yr9_new = c(stat_yr9_new, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*18)], long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*18)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*19))))
+        stat_yr10_new = c(stat_yr10_new, (sum(long_sims_100[[j+current]]$SY_ANAL[(day*9+1):(day*19)], long_sims_100[[j+current]]$SY_ORAL[(day*9+1):(day*19)]) / (nagents_start + (((nrow(abm_sims_100[[j+current]]) - nagents_start)/(length_sim/day))*20))))
       }
     }
     
@@ -1606,222 +1681,363 @@ for (i in 1:length(paradigm))
     stat_yr8_new_oral = stat_yr8_new_oral[-1]
     stat_yr9_new_oral = stat_yr9_new_oral[-1]
     stat_yr10_new_oral = stat_yr10_new_oral[-1]
+    # anal + oral 
+    stat_yr1_new = stat_yr1_new[-1]
+    stat_yr2_new = stat_yr2_new[-1]
+    stat_yr3_new = stat_yr3_new[-1]
+    stat_yr4_new = stat_yr4_new[-1]
+    stat_yr5_new = stat_yr5_new[-1]
+    stat_yr6_new = stat_yr6_new[-1]
+    stat_yr7_new = stat_yr7_new[-1]
+    stat_yr8_new = stat_yr8_new[-1]
+    stat_yr9_new = stat_yr9_new[-1]
+    stat_yr10_new = stat_yr10_new[-1]
     
-    analwide = rbind(analwide, data.frame("Paradigm"=paradigm[i],"Uptake_level"=uptake_level[j],"yr1"=stat_yr1_new_anal,"yr2"=stat_yr2_new_anal,"yr3"=stat_yr3_new_anal,"yr4"=stat_yr4_new_anal,"yr5"=stat_yr5_new_anal,"yr6"=stat_yr6_new_anal,"yr7"=stat_yr7_new_anal,"yr8"=stat_yr8_new_anal,"yr9"=stat_yr9_new_anal,"yr10"=stat_yr10_new_anal,stringsAsFactors=F))
-    oralwide = rbind(oralwide, data.frame("Paradigm"=paradigm[i],"Uptake_level"=uptake_level[j],"yr1"=stat_yr1_new_oral,"yr2"=stat_yr2_new_oral,"yr3"=stat_yr3_new_oral,"yr4"=stat_yr4_new_oral,"yr5"=stat_yr5_new_oral,"yr6"=stat_yr6_new_oral,"yr7"=stat_yr7_new_oral,"yr8"=stat_yr8_new_oral,"yr9"=stat_yr9_new_oral,"yr10"=stat_yr10_new_oral,stringsAsFactors=F))
-    
+    analwide = rbind(analwide, data.frame("Uptake"=uptake[i],"Adhere"=adhere[j],"yr1"=stat_yr1_new_anal,"yr2"=stat_yr2_new_anal,"yr3"=stat_yr3_new_anal,"yr4"=stat_yr4_new_anal,"yr5"=stat_yr5_new_anal,"yr6"=stat_yr6_new_anal,"yr7"=stat_yr7_new_anal,"yr8"=stat_yr8_new_anal,"yr9"=stat_yr9_new_anal,"yr10"=stat_yr10_new_anal,stringsAsFactors=F))
+    oralwide = rbind(oralwide, data.frame("Uptake"=uptake[i],"Adhere"=adhere[j],"yr1"=stat_yr1_new_oral,"yr2"=stat_yr2_new_oral,"yr3"=stat_yr3_new_oral,"yr4"=stat_yr4_new_oral,"yr5"=stat_yr5_new_oral,"yr6"=stat_yr6_new_oral,"yr7"=stat_yr7_new_oral,"yr8"=stat_yr8_new_oral,"yr9"=stat_yr9_new_oral,"yr10"=stat_yr10_new_oral,stringsAsFactors=F))
+    dtawide = rbind(dtawide, data.frame("Uptake"=uptake[i],"Adhere"=adhere[j],"yr1"=stat_yr1_new,"yr2"=stat_yr2_new,"yr3"=stat_yr3_new,"yr4"=stat_yr4_new,"yr5"=stat_yr5_new,"yr6"=stat_yr6_new,"yr7"=stat_yr7_new,"yr8"=stat_yr8_new,"yr9"=stat_yr9_new,"yr10"=stat_yr10_new,stringsAsFactors=F))
   }
 }
 
 analwide = analwide[-1,]
 oralwide = oralwide[-1,]
-rm(paradigm, uptake_level, day, current, i, j, k, stat_yr1_new_anal, stat_yr2_new_anal, stat_yr3_new_anal, stat_yr4_new_anal, stat_yr5_new_anal, stat_yr6_new_anal, stat_yr7_new_anal, stat_yr8_new_anal, stat_yr9_new_anal, stat_yr10_new_anal, stat_yr1_new_oral, stat_yr2_new_oral, stat_yr3_new_oral, stat_yr4_new_oral, stat_yr5_new_oral, stat_yr6_new_oral, stat_yr7_new_oral, stat_yr8_new_oral, stat_yr9_new_oral, stat_yr10_new_oral)
+dtawide = dtawide[-1,]
+rm(uptake, adhere, day, current, i, j, k, stat_yr1_new_anal, stat_yr2_new_anal, stat_yr3_new_anal, stat_yr4_new_anal, stat_yr5_new_anal, stat_yr6_new_anal, stat_yr7_new_anal, stat_yr8_new_anal, stat_yr9_new_anal, stat_yr10_new_anal, stat_yr1_new_oral, stat_yr2_new_oral, stat_yr3_new_oral, stat_yr4_new_oral, stat_yr5_new_oral, stat_yr6_new_oral, stat_yr7_new_oral, stat_yr8_new_oral, stat_yr9_new_oral, stat_yr10_new_oral, stat_yr1_new, stat_yr2_new, stat_yr3_new, stat_yr4_new, stat_yr5_new, stat_yr6_new, stat_yr7_new, stat_yr8_new, stat_yr9_new, stat_yr10_new, long_sims_20, long_sims_40, long_sims_60, long_sims_80, long_sims_100)
 
 # convert to long form
 analLong = reshape(analwide, timevar = "year", times = 2019:2028, v.names = "incidence", varying = list(3:12), direction = "long")
 oralLong = reshape(oralwide, timevar = "year", times = 2019:2028, v.names = "incidence", varying = list(3:12), direction = "long")
+dtaLong = reshape(dtawide, timevar = "year", times = 2019:2028, v.names = "incidence", varying = list(3:12), direction = "long")
 
 analLong$year1 = analLong$year - 2018
 oralLong$year1 = oralLong$year - 2018
+dtaLong$year1 = dtaLong$year - 2018
 
 # incidence per 1000
 analLong$ir = analLong$incidence * 1000
 oralLong$ir = oralLong$incidence * 1000
+dtaLong$ir = dtaLong$incidence * 1000
+
+# rename uptake categories for plots
+analLong$Uptake = ifelse(analLong$Uptake==20, "20% Uptake", ifelse(analLong$Uptake==40, "40% Uptake", ifelse(analLong$Uptake==60, "60% Uptake", ifelse(analLong$Uptake==80, "80% Uptake", "100% Uptake"))))
+oralLong$Uptake = ifelse(oralLong$Uptake==20, "20% Uptake", ifelse(oralLong$Uptake==40, "40% Uptake", ifelse(oralLong$Uptake==60, "60% Uptake", ifelse(oralLong$Uptake==80, "80% Uptake", "100% Uptake"))))
+dtaLong$Uptake = ifelse(dtaLong$Uptake==20, "20% Uptake", ifelse(dtaLong$Uptake==40, "40% Uptake", ifelse(dtaLong$Uptake==60, "60% Uptake", ifelse(dtaLong$Uptake==80, "80% Uptake", "100% Uptake"))))
 
 
-rm(oralwide, analwide)
+analLong$Uptake = factor(analLong$Uptake, levels=c("20% Uptake","40% Uptake","60% Uptake","80% Uptake","100% Uptake"))
+oralLong$Uptake = factor(oralLong$Uptake, levels=c("20% Uptake","40% Uptake","60% Uptake","80% Uptake","100% Uptake"))
+dtaLong$Uptake = factor(dtaLong$Uptake, levels=c("20% Uptake","40% Uptake","60% Uptake","80% Uptake","100% Uptake"))
+
+rm(oralwide, analwide, dtawide)
 
 # FIG 2. Incidence plots
-p1 = ggplot(analLong[analLong$Paradigm==1,], aes(x=as.factor(year1), y=ir, col = as.factor(Uptake_level), group = as.factor(Uptake_level))) +
-  geom_pointrange(mapping = aes(x = as.factor(year1), y = ir, group = as.factor(Uptake_level)),
+p1 = ggplot(analLong, aes(x=as.factor(year1), y=ir, col = as.factor(Adhere), group = as.factor(Adhere))) +
+  geom_pointrange(mapping = aes(x = as.factor(year1), y = ir, group = as.factor(Adhere)),
                   stat = "summary",
                   fun.min = function(z) {quantile(z,0.025)},
                   fun.max = function(z) {quantile(z,0.975)},
                   fun = mean) +
   stat_summary(fun=mean, geom="line", linetype = 1) +
-  labs(x="Years", y="Cumulative Incidence per 1,000") + ggtitle("Doxy PrEP for Anal Infections") + 
-  scale_color_grey(name = "Doxy Uptake",labels = c("None","10%","20%","30%","40%","50%"), start = 0.0, end = 0.7) +
+  labs(x="Years", y="Cumulative Incidence of Anal Infections per 1,000") + 
+  scale_color_grey(name = "Adherence",labels = c("None","20%","40%","60%","80%","100%"), start = 0.0, end = 0.7) +
+  facet_wrap(~Uptake) +
   theme_bw() +
-  theme(text = element_text(color = "#22211d", size = 10),legend.text=element_text(size=13), plot.title = element_text(size = 15, face = "bold"), 
-        axis.title = element_text(size = 13), axis.text = element_text(size = 10), legend.title = element_text(size=13), legend.position = "top") +
-  guides(col = guide_legend(nrow = 1))
+  theme(text = element_text(color = "#22211d", size = 12),legend.text=element_text(size=12), plot.title = element_text(size = 12, face = "bold"), 
+        axis.title = element_text(size = 12), axis.text = element_text(size = 12), legend.title = element_text(size=12)) 
 
-
-p2 = ggplot(analLong[analLong$Paradigm==2,], aes(x=as.factor(year1), y=ir, col = as.factor(Uptake_level), group = as.factor(Uptake_level))) +
-  geom_pointrange(mapping = aes(x = as.factor(year1), y = ir, group = as.factor(Uptake_level)),
+p2 = ggplot(oralLong, aes(x=as.factor(year1), y=ir, col = as.factor(Adhere), group = as.factor(Adhere))) +
+  geom_pointrange(mapping = aes(x = as.factor(year1), y = ir, group = as.factor(Adhere)),
                   stat = "summary",
                   fun.min = function(z) {quantile(z,0.025)},
                   fun.max = function(z) {quantile(z,0.975)},
                   fun = mean) +
   stat_summary(fun=mean, geom="line", linetype = 1) +
-  labs(x="Years", y="Cumulative Incidence per 1,000") + ggtitle("Doxy PEP for Anal Infections") +
-  scale_color_grey(name = "Doxy Uptake",labels = c("None","10%","20%","30%","40%","50%"), start = 0.0, end = 0.7) +
+  labs(x="Years", y="Cumulative Incidence of Oral Infections per 1,000") + 
+  scale_color_grey(name = "Adherence",labels = c("None","20%","40%","60%","80%","100%"), start = 0.0, end = 0.7) +
+  facet_wrap(~Uptake) +
   theme_bw() +
-  theme(text = element_text(color = "#22211d", size = 10),legend.text=element_text(size=13), plot.title = element_text(size = 15, face = "bold"), 
-        axis.title = element_text(size = 13), axis.text = element_text(size = 10), legend.title = element_text(size=13), legend.position = "top") +
-  guides(col = guide_legend(nrow = 1))
+  theme(text = element_text(color = "#22211d", size = 12),legend.text=element_text(size=12), plot.title = element_text(size = 12, face = "bold"), 
+        axis.title = element_text(size = 12), axis.text = element_text(size = 10), legend.title = element_text(size=12)) 
 
-p3 = ggplot(oralLong[oralLong$Paradigm==1,], aes(x=as.factor(year1), y=ir, col = as.factor(Uptake_level), group = as.factor(Uptake_level))) +
-  geom_pointrange(mapping = aes(x = as.factor(year1), y = ir, group = as.factor(Uptake_level)),
+p3 = ggplot(dtaLong, aes(x=as.factor(year1), y=ir, col = as.factor(Adhere), group = as.factor(Adhere))) +
+  geom_pointrange(mapping = aes(x = as.factor(year1), y = ir, group = as.factor(Adhere)),
                   stat = "summary",
                   fun.min = function(z) {quantile(z,0.025)},
                   fun.max = function(z) {quantile(z,0.975)},
                   fun = mean) +
   stat_summary(fun=mean, geom="line", linetype = 1) +
-  labs(x="Years", y="Cumulative Incidence per 1,000") + ggtitle("Doxy PrEP for Oral Infections") + 
-  scale_color_grey(name = "Doxy Uptake",labels = c("None","10%","20%","30%","40%","50%"), start = 0.0, end = 0.7) +
+  labs(x="Years", y="Cumulative Incidence of Oral Infections per 1,000") + 
+  scale_color_grey(name = "Adherence",labels = c("None","20%","40%","60%","80%","100%"), start = 0.0, end = 0.7) +
+  facet_wrap(~Uptake) +
   theme_bw() +
-  theme(text = element_text(color = "#22211d", size = 10),legend.text=element_text(size=13), plot.title = element_text(size = 15, face = "bold"), 
-        axis.title = element_text(size = 13), axis.text = element_text(size = 10), legend.title = element_text(size=13), legend.position = "top") +  
-  guides(col = guide_legend(nrow = 1))
+  theme(text = element_text(color = "#22211d", size = 12),legend.text=element_text(size=12), plot.title = element_text(size = 12, face = "bold"), 
+        axis.title = element_text(size = 12), axis.text = element_text(size = 12), legend.title = element_text(size=12)) 
 
-p4 = ggplot(oralLong[oralLong$Paradigm==2,], aes(x=as.factor(year1), y=ir, col = as.factor(Uptake_level), group = as.factor(Uptake_level))) +
-  geom_pointrange(mapping = aes(x = as.factor(year1), y = ir, group = as.factor(Uptake_level)),
-                  stat = "summary",
-                  fun.min = function(z) {quantile(z,0.025)},
-                  fun.max = function(z) {quantile(z,0.975)},
-                  fun = mean) +
-  stat_summary(fun=mean, geom="line", linetype = 1) +
-  labs(x="Years", y="Cumulative Incidence per 1,000") + ggtitle("Doxy PEP for Oral Infections") + 
-  scale_color_grey(name = "Doxy Uptake",labels = c("None","10%","20%","30%","40%","50%"), start = 0.0, end = 0.7) +
-  theme_bw() +
-  theme(text = element_text(color = "#22211d", size = 10),legend.text=element_text(size=13), plot.title = element_text(size = 15, face = "bold"), 
-        axis.title = element_text(size = 13), axis.text = element_text(size = 10), legend.title = element_text(size=13), legend.position = "top") +  
-  guides(col = guide_legend(nrow = 1))
+ggsave("ci_anal.tiff", plot=p1, width = 10, height = 6.7, units = "in", dpi = 1200)
+ggsave("ci_oral.jpeg", plot=p2, width = 10, height = 6.7, units = "in", dpi = 1200)
+ggsave("ci_overall.tiff", plot=p3, width = 10, height = 6.7, units = "in", dpi = 1200)
 
+# regression 
 
-p5 = ggarrange(p1, p2, p3, p4, ncol=2, nrow=2, labels = c("A", "B", "C", "D"), common.legend = TRUE, legend="top")
-ggsave("CI_plot.jpeg", plot=p5, width = 10, height = 10, units = "in", dpi = 1200)
+dtaLong$Uptake = as.factor(dtaLong$Uptake)
+dtaLong$Adhere = as.factor(dtaLong$Adhere)
 
-# risk difference in anal infections for each level of doxy prep uptake at year 1, 5, and 10
-m1 = lm(ir ~ as.factor(Uptake_level), data = analLong[analLong$Paradigm==1 & analLong$year1==1,])
-m2 = lm(ir ~ as.factor(Uptake_level), data = analLong[analLong$Paradigm==1 & analLong$year1==5,])
-m3 = lm(ir ~ as.factor(Uptake_level), data = analLong[analLong$Paradigm==1 & analLong$year1==10,])
+# risk difference in anal infections for each level of doxy pep adherence at year 1, 5, and 10 under the 20% uptake scenario
+m1 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake==20 & dtaLong$year1==1,])
+m2 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake==20 & dtaLong$year1==5,])
+m3 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake==20 & dtaLong$year1==10,])
 
 # calculate % difference
-abs(coef(m1)[6]/coef(m1)[1])
-abs(coef(m2)[6]/coef(m2)[1])
+abs(coef(m3)[2]/coef(m3)[1])
+abs(coef(m3)[3]/coef(m3)[1])
+abs(coef(m3)[4]/coef(m3)[1])
+abs(coef(m3)[5]/coef(m3)[1])
 abs(coef(m3)[6]/coef(m3)[1])
 
 summary(m3)
 
-# risk difference in anal infections for each level of doxy pep uptake at year 1, 5, and 10
-m1 = lm(ir ~ as.factor(Uptake_level), data = analLong[analLong$Paradigm==2 & analLong$year1==1,])
-m2 = lm(ir ~ as.factor(Uptake_level), data = analLong[analLong$Paradigm==2 & analLong$year1==5,])
-m3 = lm(ir ~ as.factor(Uptake_level), data = analLong[analLong$Paradigm==2 & analLong$year1==10,])
+# risk difference in anal infections for each level of doxy pep uptake at year 1, 5, and 10 under the 100% uptake scenario 
+m1 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake==100 & dtaLong$year1==1,])
+m2 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake==100 & dtaLong$year1==5,])
+m3 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake==100 & dtaLong$year1==10,])
 
 # calculate % difference
-abs(coef(m1)[6]/coef(m1)[1])
-abs(coef(m2)[6]/coef(m2)[1])
+abs(coef(m3)[2]/coef(m3)[1])
+abs(coef(m3)[3]/coef(m3)[1])
+abs(coef(m3)[4]/coef(m3)[1])
+abs(coef(m3)[5]/coef(m3)[1])
 abs(coef(m3)[6]/coef(m3)[1])
 
 summary(m3)
 
-# risk difference in oral infections for each level of doxy prep uptake at year 1, 5, and 10
-m1 = lm(ir ~ as.factor(Uptake_level), data = oralLong[oralLong$Paradigm==1 & oralLong$year1==1,])
-m2 = lm(ir ~ as.factor(Uptake_level), data = oralLong[oralLong$Paradigm==1 & oralLong$year1==5,])
-m3 = lm(ir ~ as.factor(Uptake_level), data = oralLong[oralLong$Paradigm==1 & oralLong$year1==10,])
-
-# calculate % difference
-abs(coef(m1)[6]/coef(m1)[1])
-abs(coef(m2)[6]/coef(m2)[1])
-abs(coef(m3)[6]/coef(m3)[1])
-
-summary(m3)
-
-# risk difference in oral infections for each level of doxy pep uptake at year 1, 5, and 10
-m1 = lm(ir ~ as.factor(Uptake_level), data = oralLong[oralLong$Paradigm==2 & oralLong$year1==1,])
-m2 = lm(ir ~ as.factor(Uptake_level), data = oralLong[oralLong$Paradigm==2 & oralLong$year1==5,])
-m3 = lm(ir ~ as.factor(Uptake_level), data = oralLong[oralLong$Paradigm==2 & oralLong$year1==10,])
-
-# calculate % difference
-abs(coef(m1)[6]/coef(m1)[1])
-abs(coef(m2)[6]/coef(m2)[1])
-abs(coef(m3)[6]/coef(m3)[1])
-
-summary(m3)
-
-rm(m1,m2,m3,oralLong,analLong)
+rm(m1,m2,m3,oralLong,analLong,dtaLong)
 
 ### STEP7: Estimate PIA for Condoms and Doxy ###
 
-paradigm = 1:2
-uptake_level = c(0,10,20,30,40,50)
+uptake = c(20,40,60,80,100)
+adhere = c(0,20,40,60,80,100)
 
-results_infections_anal = data.frame("Paradigm"=NA,"Uptake_level"=NA,"Total_mean"=NA,"Total_SE"=NA,"Prev_mean"=NA,"Prev_SE"=NA,"New_mean"=NA,"New_SE"=NA,"Incidence_mean"=NA,"Incidence_SE"=NA,"Prevent_mean"=NA,"Prevent_SE"=NA,"Doxy_prevent_mean"=NA,"Doxy_prevent_SE"=NA,"Sero_prevent_mean"=NA,"Sero_prevent_SE"=NA,"Cond_prevent_mean"=NA,"Cond_prevent_SE"=NA,"Total_prevent"=NA,"Doxy_prevent_pct"=NA,"Doxy_prevent_pct_SE"=NA,"Doxy_prevent_pct_ll"=NA,"Doxy_prevent_pct_ul"=NA,"Cond_prevent_pct"=NA,"Cond_prevent_pct_SE"=NA,"Cond_prevent_pct_ll"=NA,"Cond_prevent_pct_ul"=NA,stringsAsFactors=F)
-results_infections_oral = data.frame("Paradigm"=NA,"Uptake_level"=NA,"Total_mean"=NA,"Total_SE"=NA,"Prev_mean"=NA,"Prev_SE"=NA,"New_mean"=NA,"New_SE"=NA,"Incidence_mean"=NA,"Incidence_SE"=NA,"Prevent_mean"=NA,"Prevent_SE"=NA,"Doxy_prevent_mean"=NA,"Doxy_prevent_SE"=NA,"Cond_prevent_mean"=NA,"Cond_prevent_SE"=NA,"Total_prevent"=NA,"Doxy_prevent_pct"=NA,"Doxy_prevent_pct_SE"=NA,"Doxy_prevent_pct_ll"=NA,"Doxy_prevent_pct_ul"=NA,"Cond_prevent_pct"=NA,"Cond_prevent_pct_SE"=NA,"Cond_prevent_pct_ll"=NA,"Cond_prevent_pct_ul"=NA,stringsAsFactors=F)
+results_infections_anal = data.frame("Uptake"=NA,"Adhere"=NA,"Total_mean"=NA,"Total_SE"=NA,"Prev_mean"=NA,"Prev_SE"=NA,"New_mean"=NA,"New_SE"=NA,"Incidence_mean"=NA,"Incidence_SE"=NA,"Prevent_mean"=NA,"Prevent_SE"=NA,"Doxy_prevent_mean"=NA,"Doxy_prevent_SE"=NA,"Sero_prevent_mean"=NA,"Sero_prevent_SE"=NA,"Cond_prevent_mean"=NA,"Cond_prevent_SE"=NA,"Total_prevent"=NA,"Doxy_prevent_pct"=NA,"Doxy_prevent_pct_ll"=NA,"Doxy_prevent_pct_ul"=NA,"Sero_prevent_pct"=NA,"Sero_prevent_pct_ll"=NA,"Sero_prevent_pct_ul"=NA,"Cond_prevent_pct"=NA,"Cond_prevent_pct_ll"=NA,"Cond_prevent_pct_ul"=NA,stringsAsFactors=F)
+results_infections_oral = data.frame("Uptake"=NA,"Adhere"=NA,"Total_mean"=NA,"Total_SE"=NA,"Prev_mean"=NA,"Prev_SE"=NA,"New_mean"=NA,"New_SE"=NA,"Incidence_mean"=NA,"Incidence_SE"=NA,"Prevent_mean"=NA,"Prevent_SE"=NA,"Doxy_prevent_mean"=NA,"Doxy_prevent_SE"=NA,"Cond_prevent_mean"=NA,"Cond_prevent_SE"=NA,"Total_prevent"=NA,"Doxy_prevent_pct"=NA,"Doxy_prevent_pct_ll"=NA,"Doxy_prevent_pct_ul"=NA,"Cond_prevent_pct"=NA,"Cond_prevent_pct_ll"=NA,"Cond_prevent_pct_ul"=NA,stringsAsFactors=F)
+results_infections = data.frame("Uptake"=NA,"Adhere"=NA,"Total_mean"=NA,"Total_SE"=NA,"Prev_mean"=NA,"Prev_SE"=NA,"New_mean"=NA,"New_SE"=NA,"Incidence_mean"=NA,"Incidence_SE"=NA,"Prevent_mean"=NA,"Prevent_SE"=NA,"Doxy_prevent_mean"=NA,"Doxy_prevent_SE"=NA,"Sero_prevent_mean"=NA,"Sero_prevent_SE"=NA,"Cond_prevent_mean"=NA,"Cond_prevent_SE"=NA,"Total_prevent"=NA,"Doxy_prevent_pct"=NA,"Doxy_prevent_pct_ll"=NA,"Doxy_prevent_pct_ul"=NA,"Sero_prevent_pct"=NA,"Sero_prevent_pct_ll"=NA,"Sero_prevent_pct_ul"=NA,"Cond_prevent_pct"=NA,"Cond_prevent_pct_ll"=NA,"Cond_prevent_pct_ul"=NA,stringsAsFactors=F)
 
-for (i in 1:length(paradigm))
+for (i in 1:length(uptake))
 {
-  for (j in 1:length(uptake_level))
+  for (j in 1:length(adhere))
   {
     stat_prev_anal = NA               #point prevalance at post simulation
     stat_incidence_anal = NA          #cumulative incidence (primary/secondary + early latent)
     stat_new_anal = NA                #primary/secondary + early latent
     stat_total_anal = NA              #infections at post simulation
     stat_prevent_anal = NA            #total preventions 
-    stat_prevent_doxy_anal = NA       #total doxy prep preventions 
+    stat_prevent_doxy_anal = NA       #total doxy pep preventions 
     stat_prevent_sero_anal = NA       #total sero preventions 
     stat_prevent_cond_anal = NA       #total condom preventions
     stat_prevent_doxy_anal_pct = NA   #percentage of anal infections prevented due to doxy
+    stat_prevent_sero_anal_pct = NA   #percentage of anal infections prevented due to doxy
     stat_prevent_cond_anal_pct = NA   #percentage of anal infections prevented due to condoms 
     stat_prev_oral = NA               #point prevalance at post simulation
     stat_incidence_oral = NA          #cumulative incidence (primary/secondary + early latent)
     stat_new_oral = NA                #primary/secondary + early latent
     stat_total_oral = NA              #infections at post simulation
     stat_prevent_oral = NA            #total preventions 
-    stat_prevent_doxy_oral = NA       #total doxy prep preventions 
+    stat_prevent_doxy_oral = NA       #total doxy pep preventions 
     stat_prevent_cond_oral = NA       #total condom preventions 
     stat_prevent_doxy_oral_pct = NA   #percentage of oral infections prevented due to doxy
     stat_prevent_cond_oral_pct = NA   #percentage of oral infections prevented due to condoms 
+    stat_prev = NA                    #point prevalance at post simulation
+    stat_incidence = NA               #cumulative incidence (primary/secondary + early latent)
+    stat_new = NA                     #primary/secondary + early latent
+    stat_total = NA                   #infections at post simulation
+    stat_prevent = NA                 #total preventions
+    stat_prevent_doxy = NA            #total doxy pep preventions
+    stat_prevent_sero = NA            #total sero preventions 
+    stat_prevent_cond = NA            #total condom preventions
+    stat_prevent_doxy_pct = NA        #percentage of anal + oral infections prevented due to doxy
+    stat_prevent_sero_pct = NA        #percentage of anal infections prevented due to seroadaption (no oral) 
+    stat_prevent_cond_pct = NA        #percentage of oral infections prevented due to condoms
     
     for (k in 0:(nsims-1))
     {
-      current = k*length(uptake_level)
-      if (paradigm[i]==1) {
-        # DOXY PREP
-        stat_total_anal = c(stat_total_anal, (sum(abm_sims_prep[[j+current]]$SY_ANAL)))
-        stat_prev_anal = c(stat_prev_anal, (sum(abm_sims_prep[[j+current]]$SY_ANAL))/nrow(abm_sims_prep[[j+current]]))
-        stat_new_anal = c(stat_new_anal, (sum(abm_sims_prep[[j+current]]$SY_ANAL) - sum(abm_sims_prep[[j+current]]$ORIGINAL_STATUS_SY_ANAL)))
-        stat_incidence_anal = c(stat_incidence_anal, (sum(abm_sims_prep[[j+current]]$SY_ANAL) - sum(abm_sims_prep[[j+current]]$ORIGINAL_STATUS_SY_ANAL))/nrow(abm_sims_prep[[j+current]]))
-        stat_prevent_anal = c(stat_prevent_anal, (sum(abm_sims_prep[[j+current]]$DOXYPREP_PREVENT_ANAL, na.rm = T) + sum(abm_sims_prep[[j+current]]$SERO_PREVENT) + sum(abm_sims_prep[[j+current]]$COND_PREVENT_ANAL)))
-        stat_prevent_doxy_anal = c(stat_prevent_doxy_anal, (sum(abm_sims_prep[[j+current]]$DOXYPREP_PREVENT_ANAL, na.rm = T)))
-        stat_prevent_sero_anal = c(stat_prevent_sero_anal, (sum(abm_sims_prep[[j+current]]$SERO_PREVENT)))
-        stat_prevent_cond_anal = c(stat_prevent_cond_anal, (sum(abm_sims_prep[[j+current]]$COND_PREVENT_ANAL)))
-        stat_prevent_doxy_anal_pct = c(stat_prevent_doxy_anal_pct, ((sum(abm_sims_prep[[j+current]]$DOXYPREP_PREVENT_ANAL, na.rm = T))/(sum(abm_sims_prep[[j+current]]$DOXYPREP_PREVENT_ANAL, na.rm = T) + sum(abm_sims_prep[[j+current]]$SERO_PREVENT) + sum(abm_sims_prep[[j+current]]$COND_PREVENT_ANAL))))
-        stat_prevent_cond_anal_pct = c(stat_prevent_cond_anal_pct, ((sum(abm_sims_prep[[j+current]]$COND_PREVENT_ANAL))/(sum(abm_sims_prep[[j+current]]$DOXYPREP_PREVENT_ANAL, na.rm = T) + sum(abm_sims_prep[[j+current]]$SERO_PREVENT) + sum(abm_sims_prep[[j+current]]$COND_PREVENT_ANAL))))
-        stat_total_oral = c(stat_total_oral, (sum(abm_sims_prep[[j+current]]$SY_ORAL)))
-        stat_prev_oral = c(stat_prev_oral, (sum(abm_sims_prep[[j+current]]$SY_ORAL))/nrow(abm_sims_prep[[j+current]]))
-        stat_new_oral = c(stat_new_oral, (sum(abm_sims_prep[[j+current]]$SY_ORAL) - sum(abm_sims_prep[[j+current]]$ORIGINAL_STATUS_SY_ORAL)))
-        stat_incidence_oral = c(stat_incidence_oral, (sum(abm_sims_prep[[j+current]]$SY_ORAL) - sum(abm_sims_prep[[j+current]]$ORIGINAL_STATUS_SY_ORAL))/nrow(abm_sims_prep[[j+current]]))
-        stat_prevent_oral = c(stat_prevent_oral, (sum(abm_sims_prep[[j+current]]$DOXYPREP_PREVENT_ORAL, na.rm = T) + sum(abm_sims_prep[[j+current]]$COND_PREVENT_ORAL)))
-        stat_prevent_doxy_oral = c(stat_prevent_doxy_oral, (sum(abm_sims_prep[[j+current]]$DOXYPREP_PREVENT_ORAL, na.rm = T)))
-        stat_prevent_cond_oral = c(stat_prevent_cond_oral, (sum(abm_sims_prep[[j+current]]$COND_PREVENT_ORAL)))
-        stat_prevent_doxy_oral_pct = c(stat_prevent_doxy_oral_pct, ((sum(abm_sims_prep[[j+current]]$DOXYPREP_PREVENT_ORAL, na.rm = T))/(sum(abm_sims_prep[[j+current]]$DOXYPREP_PREVENT_ORAL, na.rm = T) + sum(abm_sims_prep[[j+current]]$COND_PREVENT_ORAL))))
-        stat_prevent_cond_oral_pct = c(stat_prevent_cond_oral_pct, ((sum(abm_sims_prep[[j+current]]$COND_PREVENT_ORAL))/(sum(abm_sims_prep[[j+current]]$DOXYPREP_PREVENT_ORAL, na.rm = T) + sum(abm_sims_prep[[j+current]]$COND_PREVENT_ORAL))))
-      } else if (paradigm[i]==2) {
-        # DOXY PEP
-        stat_total_anal = c(stat_total_anal, (sum(abm_sims_pep[[j+current]]$SY_ANAL)))
-        stat_prev_anal = c(stat_prev_anal, (sum(abm_sims_pep[[j+current]]$SY_ANAL))/nrow(abm_sims_pep[[j+current]]))
-        stat_new_anal = c(stat_new_anal, (sum(abm_sims_pep[[j+current]]$SY_ANAL) - sum(abm_sims_pep[[j+current]]$ORIGINAL_STATUS_SY_ANAL)))
-        stat_incidence_anal = c(stat_incidence_anal, (sum(abm_sims_pep[[j+current]]$SY_ANAL) - sum(abm_sims_pep[[j+current]]$ORIGINAL_STATUS_SY_ANAL))/nrow(abm_sims_pep[[j+current]]))
-        stat_prevent_anal = c(stat_prevent_anal, (sum(abm_sims_pep[[j+current]]$DOXYPEP_PREVENT_ANAL, na.rm = T) + sum(abm_sims_pep[[j+current]]$SERO_PREVENT) + sum(abm_sims_pep[[j+current]]$COND_PREVENT_ANAL)))
-        stat_prevent_doxy_anal = c(stat_prevent_doxy_anal, (sum(abm_sims_pep[[j+current]]$DOXYPEP_PREVENT_ANAL, na.rm = T)))
-        stat_prevent_sero_anal = c(stat_prevent_sero_anal, (sum(abm_sims_pep[[j+current]]$SERO_PREVENT)))
-        stat_prevent_cond_anal = c(stat_prevent_cond_anal, (sum(abm_sims_pep[[j+current]]$COND_PREVENT_ANAL)))
-        stat_prevent_doxy_anal_pct = c(stat_prevent_doxy_anal_pct, ((sum(abm_sims_pep[[j+current]]$DOXYPEP_PREVENT_ANAL, na.rm = T))/(sum(abm_sims_pep[[j+current]]$DOXYPEP_PREVENT_ANAL, na.rm = T) + sum(abm_sims_pep[[j+current]]$SERO_PREVENT) + sum(abm_sims_pep[[j+current]]$COND_PREVENT_ANAL))))
-        stat_prevent_cond_anal_pct = c(stat_prevent_cond_anal_pct, ((sum(abm_sims_pep[[j+current]]$COND_PREVENT_ANAL))/(sum(abm_sims_pep[[j+current]]$DOXYPEP_PREVENT_ANAL, na.rm = T) + sum(abm_sims_pep[[j+current]]$SERO_PREVENT) + sum(abm_sims_pep[[j+current]]$COND_PREVENT_ANAL))))
-        stat_total_oral = c(stat_total_oral, (sum(abm_sims_pep[[j+current]]$SY_ORAL)))
-        stat_prev_oral = c(stat_prev_oral, (sum(abm_sims_pep[[j+current]]$SY_ORAL))/nrow(abm_sims_pep[[j+current]]))
-        stat_new_oral = c(stat_new_oral, (sum(abm_sims_pep[[j+current]]$SY_ORAL) - sum(abm_sims_pep[[j+current]]$ORIGINAL_STATUS_SY_ORAL)))
-        stat_incidence_oral = c(stat_incidence_oral, (sum(abm_sims_pep[[j+current]]$SY_ORAL) - sum(abm_sims_pep[[j+current]]$ORIGINAL_STATUS_SY_ORAL))/nrow(abm_sims_pep[[j+current]]))
-        stat_prevent_oral = c(stat_prevent_oral, (sum(abm_sims_pep[[j+current]]$DOXYPEP_PREVENT_ORAL, na.rm = T) + sum(abm_sims_pep[[j+current]]$COND_PREVENT_ORAL)))
-        stat_prevent_doxy_oral = c(stat_prevent_doxy_oral, (sum(abm_sims_pep[[j+current]]$DOXYPEP_PREVENT_ORAL, na.rm = T)))
-        stat_prevent_cond_oral = c(stat_prevent_cond_oral, (sum(abm_sims_pep[[j+current]]$COND_PREVENT_ORAL)))
-        stat_prevent_doxy_oral_pct = c(stat_prevent_doxy_oral_pct, ((sum(abm_sims_pep[[j+current]]$DOXYPEP_PREVENT_ORAL, na.rm = T))/(sum(abm_sims_pep[[j+current]]$DOXYPEP_PREVENT_ORAL, na.rm = T) + sum(abm_sims_pep[[j+current]]$COND_PREVENT_ORAL))))
-        stat_prevent_cond_oral_pct = c(stat_prevent_cond_oral_pct, ((sum(abm_sims_pep[[j+current]]$COND_PREVENT_ORAL))/(sum(abm_sims_pep[[j+current]]$DOXYPEP_PREVENT_ORAL, na.rm = T) + sum(abm_sims_pep[[j+current]]$COND_PREVENT_ORAL))))
+      current = k*length(adhere)
+      if (uptake[i]==20) {
+        # 20% uptake
+        stat_total_anal = c(stat_total_anal, (sum(abm_sims_20[[j+current]]$SY_ANAL)))
+        stat_prev_anal = c(stat_prev_anal, (sum(abm_sims_20[[j+current]]$SY_ANAL))/nrow(abm_sims_20[[j+current]]))
+        stat_new_anal = c(stat_new_anal, (sum(abm_sims_20[[j+current]]$SY_ANAL) - sum(abm_sims_20[[j+current]]$ORIGINAL_STATUS_SY_ANAL)))
+        stat_incidence_anal = c(stat_incidence_anal, (sum(abm_sims_20[[j+current]]$SY_ANAL) - sum(abm_sims_20[[j+current]]$ORIGINAL_STATUS_SY_ANAL))/nrow(abm_sims_20[[j+current]]))
+        stat_prevent_anal = c(stat_prevent_anal, (sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_20[[j+current]]$SERO_PREVENT, abm_sims_20[[j+current]]$COND_PREVENT_ANAL, na.rm = T)))
+        stat_prevent_doxy_anal = c(stat_prevent_doxy_anal, (sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ANAL, na.rm = T)))
+        stat_prevent_sero_anal = c(stat_prevent_sero_anal, (sum(abm_sims_20[[j+current]]$SERO_PREVENT)))
+        stat_prevent_cond_anal = c(stat_prevent_cond_anal, (sum(abm_sims_20[[j+current]]$COND_PREVENT_ANAL)))
+        stat_prevent_doxy_anal_pct = c(stat_prevent_doxy_anal_pct, ((sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ANAL, na.rm = T))/(sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_20[[j+current]]$SERO_PREVENT, abm_sims_20[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        stat_prevent_sero_anal_pct = c(stat_prevent_sero_anal_pct, ((sum(abm_sims_20[[j+current]]$SERO_PREVENT, na.rm = T))/(sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_20[[j+current]]$SERO_PREVENT, abm_sims_20[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        stat_prevent_cond_anal_pct = c(stat_prevent_cond_anal_pct, ((sum(abm_sims_20[[j+current]]$COND_PREVENT_ANAL))/(sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_20[[j+current]]$SERO_PREVENT, abm_sims_20[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        
+        stat_total_oral = c(stat_total_oral, (sum(abm_sims_20[[j+current]]$SY_ORAL)))
+        stat_prev_oral = c(stat_prev_oral, (sum(abm_sims_20[[j+current]]$SY_ORAL))/nrow(abm_sims_20[[j+current]]))
+        stat_new_oral = c(stat_new_oral, (sum(abm_sims_20[[j+current]]$SY_ORAL) - sum(abm_sims_20[[j+current]]$ORIGINAL_STATUS_SY_ORAL)))
+        stat_incidence_oral = c(stat_incidence_oral, (sum(abm_sims_20[[j+current]]$SY_ORAL) - sum(abm_sims_20[[j+current]]$ORIGINAL_STATUS_SY_ORAL))/nrow(abm_sims_20[[j+current]]))
+        stat_prevent_oral = c(stat_prevent_oral, (sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_20[[j+current]]$COND_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_doxy_oral = c(stat_prevent_doxy_oral, (sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_cond_oral = c(stat_prevent_cond_oral, (sum(abm_sims_20[[j+current]]$COND_PREVENT_ORAL)))
+        stat_prevent_doxy_oral_pct = c(stat_prevent_doxy_oral_pct, ((sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T))/(sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_20[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_cond_oral_pct = c(stat_prevent_cond_oral_pct, ((sum(abm_sims_20[[j+current]]$COND_PREVENT_ORAL))/(sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_20[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        
+        stat_total = c(stat_total, (sum(abm_sims_20[[j+current]]$SY_ANAL, abm_sims_20[[j+current]]$SY_ORAL)))
+        stat_prev = c(stat_prev, (sum(abm_sims_20[[j+current]]$SY_ANAL, abm_sims_20[[j+current]]$SY_ORAL))/nrow(abm_sims_20[[j+current]]))
+        stat_new = c(stat_new, (sum(abm_sims_20[[j+current]]$SY_ANAL, abm_sims_20[[j+current]]$SY_ORAL) - sum(abm_sims_20[[j+current]]$ORIGINAL_STATUS_SY_ANAL, abm_sims_20[[j+current]]$ORIGINAL_STATUS_SY_ORAL)))
+        stat_incidence = c(stat_incidence, (sum(abm_sims_20[[j+current]]$SY_ANAL, abm_sims_20[[j+current]]$SY_ORAL) - sum(abm_sims_20[[j+current]]$ORIGINAL_STATUS_SY_ANAL, abm_sims_20[[j+current]]$ORIGINAL_STATUS_SY_ORAL))/nrow(abm_sims_20[[j+current]]))
+        stat_prevent = c(stat_prevent, (sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_20[[j+current]]$SERO_PREVENT, abm_sims_20[[j+current]]$COND_PREVENT_ANAL, abm_sims_20[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_20[[j+current]]$COND_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_doxy = c(stat_prevent_doxy, (sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_20[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_sero = c(stat_prevent_sero, (sum(abm_sims_20[[j+current]]$SERO_PREVENT)))
+        stat_prevent_cond = c(stat_prevent_cond, (sum(abm_sims_20[[j+current]]$COND_PREVENT_ANAL, abm_sims_20[[j+current]]$COND_PREVENT_ORAL)))
+        stat_prevent_doxy_pct = c(stat_prevent_doxy_pct, ((sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_20[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T))/(sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_20[[j+current]]$SERO_PREVENT, abm_sims_20[[j+current]]$COND_PREVENT_ANAL, abm_sims_20[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_20[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_sero_pct = c(stat_prevent_sero_pct, ((sum(abm_sims_20[[j+current]]$SERO_PREVENT))/(sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_20[[j+current]]$SERO_PREVENT, abm_sims_20[[j+current]]$COND_PREVENT_ANAL, abm_sims_20[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_20[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_cond_pct = c(stat_prevent_cond_pct, ((sum(abm_sims_20[[j+current]]$COND_PREVENT_ANAL, abm_sims_20[[j+current]]$COND_PREVENT_ORAL))/(sum(abm_sims_20[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_20[[j+current]]$SERO_PREVENT, abm_sims_20[[j+current]]$COND_PREVENT_ANAL, abm_sims_20[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_20[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+      } else if (uptake[i]==40) {
+        # 40% Uptake
+        stat_total_anal = c(stat_total_anal, (sum(abm_sims_40[[j+current]]$SY_ANAL)))
+        stat_prev_anal = c(stat_prev_anal, (sum(abm_sims_40[[j+current]]$SY_ANAL))/nrow(abm_sims_40[[j+current]]))
+        stat_new_anal = c(stat_new_anal, (sum(abm_sims_40[[j+current]]$SY_ANAL) - sum(abm_sims_40[[j+current]]$ORIGINAL_STATUS_SY_ANAL)))
+        stat_incidence_anal = c(stat_incidence_anal, (sum(abm_sims_40[[j+current]]$SY_ANAL) - sum(abm_sims_40[[j+current]]$ORIGINAL_STATUS_SY_ANAL))/nrow(abm_sims_40[[j+current]]))
+        stat_prevent_anal = c(stat_prevent_anal, (sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_40[[j+current]]$SERO_PREVENT, abm_sims_40[[j+current]]$COND_PREVENT_ANAL, na.rm = T)))
+        stat_prevent_doxy_anal = c(stat_prevent_doxy_anal, (sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ANAL, na.rm = T)))
+        stat_prevent_sero_anal = c(stat_prevent_sero_anal, (sum(abm_sims_40[[j+current]]$SERO_PREVENT)))
+        stat_prevent_cond_anal = c(stat_prevent_cond_anal, (sum(abm_sims_40[[j+current]]$COND_PREVENT_ANAL)))
+        stat_prevent_doxy_anal_pct = c(stat_prevent_doxy_anal_pct, ((sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ANAL, na.rm = T))/(sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_40[[j+current]]$SERO_PREVENT, abm_sims_40[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        stat_prevent_sero_anal_pct = c(stat_prevent_sero_anal_pct, ((sum(abm_sims_40[[j+current]]$SERO_PREVENT))/(sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_40[[j+current]]$SERO_PREVENT, abm_sims_40[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        stat_prevent_cond_anal_pct = c(stat_prevent_cond_anal_pct, ((sum(abm_sims_40[[j+current]]$COND_PREVENT_ANAL))/(sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_40[[j+current]]$SERO_PREVENT, abm_sims_40[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        
+        stat_total_oral = c(stat_total_oral, (sum(abm_sims_40[[j+current]]$SY_ORAL)))
+        stat_prev_oral = c(stat_prev_oral, (sum(abm_sims_40[[j+current]]$SY_ORAL))/nrow(abm_sims_40[[j+current]]))
+        stat_new_oral = c(stat_new_oral, (sum(abm_sims_40[[j+current]]$SY_ORAL) - sum(abm_sims_40[[j+current]]$ORIGINAL_STATUS_SY_ORAL)))
+        stat_incidence_oral = c(stat_incidence_oral, (sum(abm_sims_40[[j+current]]$SY_ORAL) - sum(abm_sims_40[[j+current]]$ORIGINAL_STATUS_SY_ORAL))/nrow(abm_sims_40[[j+current]]))
+        stat_prevent_oral = c(stat_prevent_oral, (sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_40[[j+current]]$COND_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_doxy_oral = c(stat_prevent_doxy_oral, (sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_cond_oral = c(stat_prevent_cond_oral, (sum(abm_sims_40[[j+current]]$COND_PREVENT_ORAL)))
+        stat_prevent_doxy_oral_pct = c(stat_prevent_doxy_oral_pct, ((sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T))/(sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_40[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_cond_oral_pct = c(stat_prevent_cond_oral_pct, ((sum(abm_sims_40[[j+current]]$COND_PREVENT_ORAL))/(sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_40[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        
+        stat_total = c(stat_total, (sum(abm_sims_40[[j+current]]$SY_ANAL, abm_sims_40[[j+current]]$SY_ORAL)))
+        stat_prev = c(stat_prev, (sum(abm_sims_40[[j+current]]$SY_ANAL, abm_sims_40[[j+current]]$SY_ORAL))/nrow(abm_sims_40[[j+current]]))
+        stat_new = c(stat_new, (sum(abm_sims_40[[j+current]]$SY_ANAL, abm_sims_40[[j+current]]$SY_ORAL) - sum(abm_sims_40[[j+current]]$ORIGINAL_STATUS_SY_ANAL, abm_sims_40[[j+current]]$ORIGINAL_STATUS_SY_ORAL)))
+        stat_incidence = c(stat_incidence, (sum(abm_sims_40[[j+current]]$SY_ANAL, abm_sims_40[[j+current]]$SY_ORAL) - sum(abm_sims_40[[j+current]]$ORIGINAL_STATUS_SY_ANAL, abm_sims_40[[j+current]]$ORIGINAL_STATUS_SY_ORAL))/nrow(abm_sims_40[[j+current]]))
+        stat_prevent = c(stat_prevent, (sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_40[[j+current]]$SERO_PREVENT, abm_sims_40[[j+current]]$COND_PREVENT_ANAL, abm_sims_40[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_40[[j+current]]$COND_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_doxy = c(stat_prevent_doxy, (sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_40[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_sero = c(stat_prevent_sero, (sum(abm_sims_40[[j+current]]$SERO_PREVENT)))
+        stat_prevent_cond = c(stat_prevent_cond, (sum(abm_sims_40[[j+current]]$COND_PREVENT_ANAL, abm_sims_40[[j+current]]$COND_PREVENT_ORAL)))
+        stat_prevent_doxy_pct = c(stat_prevent_doxy_pct, ((sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_40[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T))/(sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_40[[j+current]]$SERO_PREVENT, abm_sims_40[[j+current]]$COND_PREVENT_ANAL, abm_sims_40[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_40[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_sero_pct = c(stat_prevent_sero_pct, ((sum(abm_sims_40[[j+current]]$SERO_PREVENT))/(sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_40[[j+current]]$SERO_PREVENT, abm_sims_40[[j+current]]$COND_PREVENT_ANAL, abm_sims_40[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_40[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_cond_pct = c(stat_prevent_cond_pct, ((sum(abm_sims_40[[j+current]]$COND_PREVENT_ANAL, abm_sims_40[[j+current]]$COND_PREVENT_ORAL))/(sum(abm_sims_40[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_40[[j+current]]$SERO_PREVENT, abm_sims_40[[j+current]]$COND_PREVENT_ANAL, abm_sims_40[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_40[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+      } else if (uptake[i]==60) {
+        # 60% Uptake
+        stat_total_anal = c(stat_total_anal, (sum(abm_sims_60[[j+current]]$SY_ANAL)))
+        stat_prev_anal = c(stat_prev_anal, (sum(abm_sims_60[[j+current]]$SY_ANAL))/nrow(abm_sims_60[[j+current]]))
+        stat_new_anal = c(stat_new_anal, (sum(abm_sims_60[[j+current]]$SY_ANAL) - sum(abm_sims_60[[j+current]]$ORIGINAL_STATUS_SY_ANAL)))
+        stat_incidence_anal = c(stat_incidence_anal, (sum(abm_sims_60[[j+current]]$SY_ANAL) - sum(abm_sims_60[[j+current]]$ORIGINAL_STATUS_SY_ANAL))/nrow(abm_sims_60[[j+current]]))
+        stat_prevent_anal = c(stat_prevent_anal, (sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_60[[j+current]]$SERO_PREVENT, abm_sims_60[[j+current]]$COND_PREVENT_ANAL, na.rm = T)))
+        stat_prevent_doxy_anal = c(stat_prevent_doxy_anal, (sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ANAL, na.rm = T)))
+        stat_prevent_sero_anal = c(stat_prevent_sero_anal, (sum(abm_sims_60[[j+current]]$SERO_PREVENT)))
+        stat_prevent_cond_anal = c(stat_prevent_cond_anal, (sum(abm_sims_60[[j+current]]$COND_PREVENT_ANAL)))
+        stat_prevent_doxy_anal_pct = c(stat_prevent_doxy_anal_pct, ((sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ANAL, na.rm = T))/(sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_60[[j+current]]$SERO_PREVENT, abm_sims_60[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        stat_prevent_sero_anal_pct = c(stat_prevent_sero_anal_pct, ((sum(abm_sims_60[[j+current]]$SERO_PREVENT))/(sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_60[[j+current]]$SERO_PREVENT, abm_sims_60[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        stat_prevent_cond_anal_pct = c(stat_prevent_cond_anal_pct, ((sum(abm_sims_60[[j+current]]$COND_PREVENT_ANAL))/(sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_60[[j+current]]$SERO_PREVENT, abm_sims_60[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        
+        stat_total_oral = c(stat_total_oral, (sum(abm_sims_60[[j+current]]$SY_ORAL)))
+        stat_prev_oral = c(stat_prev_oral, (sum(abm_sims_60[[j+current]]$SY_ORAL))/nrow(abm_sims_60[[j+current]]))
+        stat_new_oral = c(stat_new_oral, (sum(abm_sims_60[[j+current]]$SY_ORAL) - sum(abm_sims_60[[j+current]]$ORIGINAL_STATUS_SY_ORAL)))
+        stat_incidence_oral = c(stat_incidence_oral, (sum(abm_sims_60[[j+current]]$SY_ORAL) - sum(abm_sims_60[[j+current]]$ORIGINAL_STATUS_SY_ORAL))/nrow(abm_sims_60[[j+current]]))
+        stat_prevent_oral = c(stat_prevent_oral, (sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_60[[j+current]]$COND_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_doxy_oral = c(stat_prevent_doxy_oral, (sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_cond_oral = c(stat_prevent_cond_oral, (sum(abm_sims_60[[j+current]]$COND_PREVENT_ORAL)))
+        stat_prevent_doxy_oral_pct = c(stat_prevent_doxy_oral_pct, ((sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T))/(sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_60[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_cond_oral_pct = c(stat_prevent_cond_oral_pct, ((sum(abm_sims_60[[j+current]]$COND_PREVENT_ORAL))/(sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_60[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        
+        stat_total = c(stat_total, (sum(abm_sims_60[[j+current]]$SY_ANAL, abm_sims_60[[j+current]]$SY_ORAL)))
+        stat_prev = c(stat_prev, (sum(abm_sims_60[[j+current]]$SY_ANAL, abm_sims_60[[j+current]]$SY_ORAL))/nrow(abm_sims_60[[j+current]]))
+        stat_new = c(stat_new, (sum(abm_sims_60[[j+current]]$SY_ANAL, abm_sims_60[[j+current]]$SY_ORAL) - sum(abm_sims_60[[j+current]]$ORIGINAL_STATUS_SY_ANAL, abm_sims_60[[j+current]]$ORIGINAL_STATUS_SY_ORAL)))
+        stat_incidence = c(stat_incidence, (sum(abm_sims_60[[j+current]]$SY_ANAL, abm_sims_60[[j+current]]$SY_ORAL) - sum(abm_sims_60[[j+current]]$ORIGINAL_STATUS_SY_ANAL, abm_sims_60[[j+current]]$ORIGINAL_STATUS_SY_ORAL))/nrow(abm_sims_60[[j+current]]))
+        stat_prevent = c(stat_prevent, (sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_60[[j+current]]$SERO_PREVENT, abm_sims_60[[j+current]]$COND_PREVENT_ANAL, abm_sims_60[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_60[[j+current]]$COND_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_doxy = c(stat_prevent_doxy, (sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_60[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_sero = c(stat_prevent_sero, (sum(abm_sims_60[[j+current]]$SERO_PREVENT)))
+        stat_prevent_cond = c(stat_prevent_cond, (sum(abm_sims_60[[j+current]]$COND_PREVENT_ANAL, abm_sims_60[[j+current]]$COND_PREVENT_ORAL)))
+        stat_prevent_doxy_pct = c(stat_prevent_doxy_pct, ((sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_60[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T))/(sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_60[[j+current]]$SERO_PREVENT, abm_sims_60[[j+current]]$COND_PREVENT_ANAL, abm_sims_60[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_60[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_sero_pct = c(stat_prevent_sero_pct, ((sum(abm_sims_60[[j+current]]$SERO_PREVENT))/(sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_60[[j+current]]$SERO_PREVENT, abm_sims_60[[j+current]]$COND_PREVENT_ANAL, abm_sims_60[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_60[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_cond_pct = c(stat_prevent_cond_pct, ((sum(abm_sims_60[[j+current]]$COND_PREVENT_ANAL, abm_sims_60[[j+current]]$COND_PREVENT_ORAL))/(sum(abm_sims_60[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_60[[j+current]]$SERO_PREVENT, abm_sims_60[[j+current]]$COND_PREVENT_ANAL, abm_sims_60[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_60[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+      } else if (uptake[i]==80) {
+        # 8% Uptake
+        stat_total_anal = c(stat_total_anal, (sum(abm_sims_80[[j+current]]$SY_ANAL)))
+        stat_prev_anal = c(stat_prev_anal, (sum(abm_sims_80[[j+current]]$SY_ANAL))/nrow(abm_sims_80[[j+current]]))
+        stat_new_anal = c(stat_new_anal, (sum(abm_sims_80[[j+current]]$SY_ANAL) - sum(abm_sims_80[[j+current]]$ORIGINAL_STATUS_SY_ANAL)))
+        stat_incidence_anal = c(stat_incidence_anal, (sum(abm_sims_80[[j+current]]$SY_ANAL) - sum(abm_sims_80[[j+current]]$ORIGINAL_STATUS_SY_ANAL))/nrow(abm_sims_80[[j+current]]))
+        stat_prevent_anal = c(stat_prevent_anal, (sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_80[[j+current]]$SERO_PREVENT, abm_sims_80[[j+current]]$COND_PREVENT_ANAL, na.rm = T)))
+        stat_prevent_doxy_anal = c(stat_prevent_doxy_anal, (sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ANAL, na.rm = T)))
+        stat_prevent_sero_anal = c(stat_prevent_sero_anal, (sum(abm_sims_80[[j+current]]$SERO_PREVENT)))
+        stat_prevent_cond_anal = c(stat_prevent_cond_anal, (sum(abm_sims_80[[j+current]]$COND_PREVENT_ANAL)))
+        stat_prevent_doxy_anal_pct = c(stat_prevent_doxy_anal_pct, ((sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ANAL, na.rm = T))/(sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_80[[j+current]]$SERO_PREVENT, abm_sims_80[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        stat_prevent_sero_anal_pct = c(stat_prevent_sero_anal_pct, ((sum(abm_sims_80[[j+current]]$SERO_PREVENT))/(sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_80[[j+current]]$SERO_PREVENT, abm_sims_80[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        stat_prevent_cond_anal_pct = c(stat_prevent_cond_anal_pct, ((sum(abm_sims_80[[j+current]]$COND_PREVENT_ANAL))/(sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_80[[j+current]]$SERO_PREVENT, abm_sims_80[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        
+        stat_total_oral = c(stat_total_oral, (sum(abm_sims_80[[j+current]]$SY_ORAL)))
+        stat_prev_oral = c(stat_prev_oral, (sum(abm_sims_80[[j+current]]$SY_ORAL))/nrow(abm_sims_80[[j+current]]))
+        stat_new_oral = c(stat_new_oral, (sum(abm_sims_80[[j+current]]$SY_ORAL) - sum(abm_sims_80[[j+current]]$ORIGINAL_STATUS_SY_ORAL)))
+        stat_incidence_oral = c(stat_incidence_oral, (sum(abm_sims_80[[j+current]]$SY_ORAL) - sum(abm_sims_80[[j+current]]$ORIGINAL_STATUS_SY_ORAL))/nrow(abm_sims_80[[j+current]]))
+        stat_prevent_oral = c(stat_prevent_oral, (sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_80[[j+current]]$COND_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_doxy_oral = c(stat_prevent_doxy_oral, (sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_cond_oral = c(stat_prevent_cond_oral, (sum(abm_sims_80[[j+current]]$COND_PREVENT_ORAL)))
+        stat_prevent_doxy_oral_pct = c(stat_prevent_doxy_oral_pct, ((sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T))/(sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_80[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_cond_oral_pct = c(stat_prevent_cond_oral_pct, ((sum(abm_sims_80[[j+current]]$COND_PREVENT_ORAL))/(sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_80[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        
+        stat_total = c(stat_total, (sum(abm_sims_80[[j+current]]$SY_ANAL, abm_sims_80[[j+current]]$SY_ORAL)))
+        stat_prev = c(stat_prev, (sum(abm_sims_80[[j+current]]$SY_ANAL, abm_sims_80[[j+current]]$SY_ORAL))/nrow(abm_sims_80[[j+current]]))
+        stat_new = c(stat_new, (sum(abm_sims_80[[j+current]]$SY_ANAL, abm_sims_80[[j+current]]$SY_ORAL) - sum(abm_sims_80[[j+current]]$ORIGINAL_STATUS_SY_ANAL, abm_sims_80[[j+current]]$ORIGINAL_STATUS_SY_ORAL)))
+        stat_incidence = c(stat_incidence, (sum(abm_sims_80[[j+current]]$SY_ANAL, abm_sims_80[[j+current]]$SY_ORAL) - sum(abm_sims_80[[j+current]]$ORIGINAL_STATUS_SY_ANAL, abm_sims_80[[j+current]]$ORIGINAL_STATUS_SY_ORAL))/nrow(abm_sims_80[[j+current]]))
+        stat_prevent = c(stat_prevent, (sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_80[[j+current]]$SERO_PREVENT, abm_sims_80[[j+current]]$COND_PREVENT_ANAL, abm_sims_80[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_80[[j+current]]$COND_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_doxy = c(stat_prevent_doxy, (sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_80[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_sero = c(stat_prevent_sero, (sum(abm_sims_80[[j+current]]$SERO_PREVENT)))
+        stat_prevent_cond = c(stat_prevent_cond, (sum(abm_sims_80[[j+current]]$COND_PREVENT_ANAL, abm_sims_80[[j+current]]$COND_PREVENT_ORAL)))
+        stat_prevent_doxy_pct = c(stat_prevent_doxy_pct, ((sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_80[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T))/(sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_80[[j+current]]$SERO_PREVENT, abm_sims_80[[j+current]]$COND_PREVENT_ANAL, abm_sims_80[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_80[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_sero_pct = c(stat_prevent_sero_pct, ((sum(abm_sims_80[[j+current]]$SERO_PREVENT))/(sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_80[[j+current]]$SERO_PREVENT, abm_sims_80[[j+current]]$COND_PREVENT_ANAL, abm_sims_80[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_80[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_cond_pct = c(stat_prevent_cond_pct, ((sum(abm_sims_80[[j+current]]$COND_PREVENT_ANAL, abm_sims_80[[j+current]]$COND_PREVENT_ORAL))/(sum(abm_sims_80[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_80[[j+current]]$SERO_PREVENT, abm_sims_80[[j+current]]$COND_PREVENT_ANAL, abm_sims_80[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_80[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+      } else if (uptake[i]==100) {
+        # 100% Uptake
+        stat_total_anal = c(stat_total_anal, (sum(abm_sims_100[[j+current]]$SY_ANAL)))
+        stat_prev_anal = c(stat_prev_anal, (sum(abm_sims_100[[j+current]]$SY_ANAL))/nrow(abm_sims_100[[j+current]]))
+        stat_new_anal = c(stat_new_anal, (sum(abm_sims_100[[j+current]]$SY_ANAL) - sum(abm_sims_100[[j+current]]$ORIGINAL_STATUS_SY_ANAL)))
+        stat_incidence_anal = c(stat_incidence_anal, (sum(abm_sims_100[[j+current]]$SY_ANAL) - sum(abm_sims_100[[j+current]]$ORIGINAL_STATUS_SY_ANAL))/nrow(abm_sims_100[[j+current]]))
+        stat_prevent_anal = c(stat_prevent_anal, (sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_100[[j+current]]$SERO_PREVENT, abm_sims_100[[j+current]]$COND_PREVENT_ANAL, na.rm = T)))
+        stat_prevent_doxy_anal = c(stat_prevent_doxy_anal, (sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ANAL, na.rm = T)))
+        stat_prevent_sero_anal = c(stat_prevent_sero_anal, (sum(abm_sims_100[[j+current]]$SERO_PREVENT)))
+        stat_prevent_cond_anal = c(stat_prevent_cond_anal, (sum(abm_sims_100[[j+current]]$COND_PREVENT_ANAL)))
+        stat_prevent_doxy_anal_pct = c(stat_prevent_doxy_anal_pct, ((sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ANAL, na.rm = T))/(sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_100[[j+current]]$SERO_PREVENT, abm_sims_100[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        stat_prevent_sero_anal_pct = c(stat_prevent_sero_anal_pct, ((sum(abm_sims_100[[j+current]]$SERO_PREVENT))/(sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_100[[j+current]]$SERO_PREVENT, abm_sims_100[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        stat_prevent_cond_anal_pct = c(stat_prevent_cond_anal_pct, ((sum(abm_sims_100[[j+current]]$COND_PREVENT_ANAL))/(sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_100[[j+current]]$SERO_PREVENT, abm_sims_100[[j+current]]$COND_PREVENT_ANAL, na.rm = T))))
+        
+        stat_total_oral = c(stat_total_oral, (sum(abm_sims_100[[j+current]]$SY_ORAL)))
+        stat_prev_oral = c(stat_prev_oral, (sum(abm_sims_100[[j+current]]$SY_ORAL))/nrow(abm_sims_100[[j+current]]))
+        stat_new_oral = c(stat_new_oral, (sum(abm_sims_100[[j+current]]$SY_ORAL) - sum(abm_sims_100[[j+current]]$ORIGINAL_STATUS_SY_ORAL)))
+        stat_incidence_oral = c(stat_incidence_oral, (sum(abm_sims_100[[j+current]]$SY_ORAL) - sum(abm_sims_100[[j+current]]$ORIGINAL_STATUS_SY_ORAL))/nrow(abm_sims_100[[j+current]]))
+        stat_prevent_oral = c(stat_prevent_oral, (sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_100[[j+current]]$COND_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_doxy_oral = c(stat_prevent_doxy_oral, (sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_cond_oral = c(stat_prevent_cond_oral, (sum(abm_sims_100[[j+current]]$COND_PREVENT_ORAL)))
+        stat_prevent_doxy_oral_pct = c(stat_prevent_doxy_oral_pct, ((sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T))/(sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_100[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_cond_oral_pct = c(stat_prevent_cond_oral_pct, ((sum(abm_sims_100[[j+current]]$COND_PREVENT_ORAL))/(sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_100[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        
+        stat_total = c(stat_total, (sum(abm_sims_100[[j+current]]$SY_ANAL, abm_sims_100[[j+current]]$SY_ORAL)))
+        stat_prev = c(stat_prev, (sum(abm_sims_100[[j+current]]$SY_ANAL, abm_sims_100[[j+current]]$SY_ORAL))/nrow(abm_sims_100[[j+current]]))
+        stat_new = c(stat_new, (sum(abm_sims_100[[j+current]]$SY_ANAL, abm_sims_100[[j+current]]$SY_ORAL) - sum(abm_sims_100[[j+current]]$ORIGINAL_STATUS_SY_ANAL, abm_sims_100[[j+current]]$ORIGINAL_STATUS_SY_ORAL)))
+        stat_incidence = c(stat_incidence, (sum(abm_sims_100[[j+current]]$SY_ANAL, abm_sims_100[[j+current]]$SY_ORAL) - sum(abm_sims_100[[j+current]]$ORIGINAL_STATUS_SY_ANAL, abm_sims_100[[j+current]]$ORIGINAL_STATUS_SY_ORAL))/nrow(abm_sims_100[[j+current]]))
+        stat_prevent = c(stat_prevent, (sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_100[[j+current]]$SERO_PREVENT, abm_sims_100[[j+current]]$COND_PREVENT_ANAL, abm_sims_100[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_100[[j+current]]$COND_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_doxy = c(stat_prevent_doxy, (sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_100[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T)))
+        stat_prevent_sero = c(stat_prevent_sero, (sum(abm_sims_100[[j+current]]$SERO_PREVENT)))
+        stat_prevent_cond = c(stat_prevent_cond, (sum(abm_sims_100[[j+current]]$COND_PREVENT_ANAL, abm_sims_100[[j+current]]$COND_PREVENT_ORAL)))
+        stat_prevent_doxy_pct = c(stat_prevent_doxy_pct, ((sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_100[[j+current]]$DOXY_PREVENT_ORAL, na.rm = T))/(sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_100[[j+current]]$SERO_PREVENT, abm_sims_100[[j+current]]$COND_PREVENT_ANAL, abm_sims_100[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_100[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_sero_pct = c(stat_prevent_sero_pct, ((sum(abm_sims_100[[j+current]]$SERO_PREVENT))/(sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_100[[j+current]]$SERO_PREVENT, abm_sims_100[[j+current]]$COND_PREVENT_ANAL, abm_sims_100[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_100[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
+        stat_prevent_cond_pct = c(stat_prevent_cond_pct, ((sum(abm_sims_100[[j+current]]$COND_PREVENT_ANAL, abm_sims_100[[j+current]]$COND_PREVENT_ORAL))/(sum(abm_sims_100[[j+current]]$DOXY_PREVENT_ANAL, abm_sims_100[[j+current]]$SERO_PREVENT, abm_sims_100[[j+current]]$COND_PREVENT_ANAL, abm_sims_100[[j+current]]$DOXY_PREVENT_ORAL, abm_sims_100[[j+current]]$COND_PREVENT_ORAL, na.rm = T))))
       }
     }
+    
     stat_total_anal = stat_total_anal[-1]
     stat_prev_anal = stat_prev_anal[-1]
     stat_new_anal = stat_new_anal[-1]
@@ -1831,6 +2047,7 @@ for (i in 1:length(paradigm))
     stat_prevent_sero_anal = stat_prevent_sero_anal[-1]
     stat_prevent_cond_anal = stat_prevent_cond_anal[-1]
     stat_prevent_doxy_anal_pct = stat_prevent_doxy_anal_pct[-1]
+    stat_prevent_sero_anal_pct = stat_prevent_sero_anal_pct[-1]
     stat_prevent_cond_anal_pct = stat_prevent_cond_anal_pct[-1]
     stat_total_oral = stat_total_oral[-1]
     stat_prev_oral = stat_prev_oral[-1]
@@ -1841,17 +2058,65 @@ for (i in 1:length(paradigm))
     stat_prevent_cond_oral = stat_prevent_cond_oral[-1]
     stat_prevent_doxy_oral_pct = stat_prevent_doxy_oral_pct[-1]
     stat_prevent_cond_oral_pct = stat_prevent_cond_oral_pct[-1]
+    stat_total = stat_total[-1]
+    stat_prev = stat_prev[-1]
+    stat_new = stat_new[-1]
+    stat_incidence = stat_incidence[-1]
+    stat_prevent = stat_prevent[-1]
+    stat_prevent_doxy = stat_prevent_doxy[-1]
+    stat_prevent_sero = stat_prevent_sero[-1]
+    stat_prevent_cond = stat_prevent_cond[-1]
+    stat_prevent_doxy_pct = stat_prevent_doxy_pct[-1]
+    stat_prevent_sero_pct = stat_prevent_sero_pct[-1]
+    stat_prevent_cond_pct = stat_prevent_cond_pct[-1]
     
-    results_infections_anal = rbind(results_infections_anal, data.frame("Paradigm"=paradigm[i],"Uptake_level"=uptake_level[j],"Total_mean"=mean(stat_total_anal),"Total_SE"=(sd(stat_total_anal)/sqrt(length(stat_total_anal))),"Prev_mean"=mean(stat_prev_anal),"Prev_SE"=(sd(stat_prev_anal)/sqrt(length(stat_prev_anal))),"New_mean"=mean(stat_new_anal),"New_SE"=(sd(stat_new_anal)/sqrt(length(stat_new_anal))),"Incidence_mean"=mean(stat_incidence_anal),"Incidence_SE"=(sd(stat_incidence_anal)/sqrt(length(stat_incidence_anal))),"Prevent_mean"=mean(stat_prevent_anal),"Prevent_SE"=(sd(stat_prevent_anal)/sqrt(length(stat_prevent_anal))),"Doxy_prevent_mean"=mean(stat_prevent_doxy_anal),"Doxy_prevent_SE"=(sd(stat_prevent_doxy_anal)/sqrt(length(stat_prevent_doxy_anal))),"Sero_prevent_mean"=mean(stat_prevent_sero_anal),"Sero_prevent_SE"=(sd(stat_prevent_sero_anal)/sqrt(length(stat_prevent_sero_anal))),"Cond_prevent_mean"=mean(stat_prevent_cond_anal),"Cond_prevent_SE"=(sd(stat_prevent_cond_anal)/sqrt(length(stat_prevent_cond_anal))),"Total_prevent"=mean(stat_prevent_all_anal),"Doxy_prevent_pct"=mean(stat_prevent_doxy_anal_pct),"Doxy_prevent_pct_SE"=(sd(stat_prevent_doxy_anal_pct)/sqrt(length(stat_prevent_doxy_anal_pct))),"Doxy_prevent_pct_ll"=quantile(stat_prevent_doxy_anal_pct, 0.025),"Doxy_prevent_pct_ul"=quantile(stat_prevent_doxy_anal_pct, 0.975),"Cond_prevent_pct"=mean(stat_prevent_cond_anal_pct),"Cond_prevent_pct_SE"=(sd(stat_prevent_cond_anal_pct)/sqrt(length(stat_prevent_cond_anal_pct))),"Cond_prevent_pct_ll"=quantile(stat_prevent_cond_anal_pct,0.025),"Cond_prevent_pct_ul"=quantile(stat_prevent_cond_anal_pct,0.975),stringsAsFactors=F))
-    results_infections_oral = rbind(results_infections_oral, data.frame("Paradigm"=paradigm[i],"Uptake_level"=uptake_level[j],"Total_mean"=mean(stat_total_oral),"Total_SE"=(sd(stat_total_oral)/sqrt(length(stat_total_oral))),"Prev_mean"=mean(stat_prev_oral),"Prev_SE"=(sd(stat_prev_oral)/sqrt(length(stat_prev_oral))),"New_mean"=mean(stat_new_oral),"New_SE"=(sd(stat_new_oral)/sqrt(length(stat_new_oral))),"Incidence_mean"=mean(stat_incidence_oral),"Incidence_SE"=(sd(stat_incidence_oral)/sqrt(length(stat_incidence_oral))),"Prevent_mean"=mean(stat_prevent_oral),"Prevent_SE"=(sd(stat_prevent_oral)/sqrt(length(stat_prevent_oral))),"Doxy_prevent_mean"=mean(stat_prevent_doxy_oral),"Doxy_prevent_SE"=(sd(stat_prevent_doxy_oral)/sqrt(length(stat_prevent_doxy_oral))),"Cond_prevent_mean"=mean(stat_prevent_cond_oral),"Cond_prevent_SE"=(sd(stat_prevent_cond_oral)/sqrt(length(stat_prevent_cond_oral))),"Total_prevent"=mean(stat_prevent_all_oral),"Doxy_prevent_pct"=mean(stat_prevent_doxy_oral_pct),"Doxy_prevent_pct_SE"=(sd(stat_prevent_doxy_oral_pct)/sqrt(length(stat_prevent_doxy_oral_pct))),"Doxy_prevent_pct_ll"=quantile(stat_prevent_doxy_oral_pct,0.025),"Doxy_prevent_pct_ul"=quantile(stat_prevent_doxy_oral_pct, 0.975),"Cond_prevent_pct"=mean(stat_prevent_cond_oral_pct),"Cond_prevent_pct_SE"=(sd(stat_prevent_cond_oral_pct)/sqrt(length(stat_prevent_cond_oral_pct))),"Cond_prevent_pct_ll"=quantile(stat_prevent_cond_oral_pct, 0.025),"Cond_prevent_pct_ul"=quantile(stat_prevent_cond_oral_pct,0.975),stringsAsFactors=F))
+    results_infections_anal = rbind(results_infections_anal, data.frame("Uptake"=uptake[i],"Adhere"=adhere[j],"Total_mean"=mean(stat_total_anal),"Total_SE"=(sd(stat_total_anal)/sqrt(length(stat_total_anal))),"Prev_mean"=mean(stat_prev_anal),"Prev_SE"=(sd(stat_prev_anal)/sqrt(length(stat_prev_anal))),"New_mean"=mean(stat_new_anal),"New_SE"=(sd(stat_new_anal)/sqrt(length(stat_new_anal))),"Incidence_mean"=mean(stat_incidence_anal),"Incidence_SE"=(sd(stat_incidence_anal)/sqrt(length(stat_incidence_anal))),"Prevent_mean"=mean(stat_prevent_anal),"Prevent_SE"=(sd(stat_prevent_anal)/sqrt(length(stat_prevent_anal))),"Doxy_prevent_mean"=mean(stat_prevent_doxy_anal),"Doxy_prevent_SE"=(sd(stat_prevent_doxy_anal)/sqrt(length(stat_prevent_doxy_anal))),"Sero_prevent_mean"=mean(stat_prevent_sero_anal),"Sero_prevent_SE"=(sd(stat_prevent_sero_anal)/sqrt(length(stat_prevent_sero_anal))),"Cond_prevent_mean"=mean(stat_prevent_cond_anal),"Cond_prevent_SE"=(sd(stat_prevent_cond_anal)/sqrt(length(stat_prevent_cond_anal))),"Total_prevent"=mean(stat_prevent_anal),"Doxy_prevent_pct"=mean(stat_prevent_doxy_anal_pct),"Doxy_prevent_pct_ll"=quantile(stat_prevent_doxy_anal_pct, 0.025),"Doxy_prevent_pct_ul"=quantile(stat_prevent_doxy_anal_pct, 0.975),"Sero_prevent_pct"=mean(stat_prevent_sero_anal_pct),"Sero_prevent_pct_ll"=quantile(stat_prevent_sero_anal_pct, 0.025),"Sero_prevent_pct_ul"=quantile(stat_prevent_sero_anal_pct, 0.975),"Cond_prevent_pct"=mean(stat_prevent_cond_anal_pct),"Cond_prevent_pct_ll"=quantile(stat_prevent_cond_anal_pct, 0.025),"Cond_prevent_pct_ul"=quantile(stat_prevent_cond_anal_pct, 0.975),stringsAsFactors=F))
+    results_infections_oral = rbind(results_infections_oral, data.frame("Uptake"=uptake[i],"Adhere"=adhere[j],"Total_mean"=mean(stat_total_oral),"Total_SE"=(sd(stat_total_oral)/sqrt(length(stat_total_oral))),"Prev_mean"=mean(stat_prev_oral),"Prev_SE"=(sd(stat_prev_oral)/sqrt(length(stat_prev_oral))),"New_mean"=mean(stat_new_oral),"New_SE"=(sd(stat_new_oral)/sqrt(length(stat_new_oral))),"Incidence_mean"=mean(stat_incidence_oral),"Incidence_SE"=(sd(stat_incidence_oral)/sqrt(length(stat_incidence_oral))),"Prevent_mean"=mean(stat_prevent_oral),"Prevent_SE"=(sd(stat_prevent_oral)/sqrt(length(stat_prevent_oral))),"Doxy_prevent_mean"=mean(stat_prevent_doxy_oral),"Doxy_prevent_SE"=(sd(stat_prevent_doxy_oral)/sqrt(length(stat_prevent_doxy_oral))),"Cond_prevent_mean"=mean(stat_prevent_cond_oral),"Cond_prevent_SE"=(sd(stat_prevent_cond_oral)/sqrt(length(stat_prevent_cond_oral))),"Total_prevent"=mean(stat_prevent_oral),"Doxy_prevent_pct"=mean(stat_prevent_doxy_oral_pct),"Doxy_prevent_pct_ll"=quantile(stat_prevent_doxy_oral_pct,0.025),"Doxy_prevent_pct_ul"=quantile(stat_prevent_doxy_oral_pct, 0.975),"Cond_prevent_pct"=mean(stat_prevent_cond_oral_pct),"Cond_prevent_pct_ll"=quantile(stat_prevent_cond_oral_pct,0.025),"Cond_prevent_pct_ul"=quantile(stat_prevent_cond_oral_pct, 0.975),stringsAsFactors=F))
+    results_infections = rbind(results_infections, data.frame("Uptake"=uptake[i],"Adhere"=adhere[j],"Total_mean"=mean(stat_total),"Total_SE"=(sd(stat_total)/sqrt(length(stat_total))),"Prev_mean"=mean(stat_prev),"Prev_SE"=(sd(stat_prev)/sqrt(length(stat_prev))),"New_mean"=mean(stat_new),"New_SE"=(sd(stat_new)/sqrt(length(stat_new))),"Incidence_mean"=mean(stat_incidence),"Incidence_SE"=(sd(stat_incidence)/sqrt(length(stat_incidence))),"Prevent_mean"=mean(stat_prevent),"Prevent_SE"=(sd(stat_prevent)/sqrt(length(stat_prevent))),"Doxy_prevent_mean"=mean(stat_prevent_doxy),"Doxy_prevent_SE"=(sd(stat_prevent_doxy)/sqrt(length(stat_prevent_doxy))),"Sero_prevent_mean"=mean(stat_prevent_sero),"Sero_prevent_SE"=(sd(stat_prevent_sero)/sqrt(length(stat_prevent_sero))),"Cond_prevent_mean"=mean(stat_prevent_cond),"Cond_prevent_SE"=(sd(stat_prevent_cond)/sqrt(length(stat_prevent_cond))),"Total_prevent"=mean(stat_prevent),"Doxy_prevent_pct"=mean(stat_prevent_doxy_pct),"Doxy_prevent_pct_ll"=quantile(stat_prevent_doxy_pct, 0.025),"Doxy_prevent_pct_ul"=quantile(stat_prevent_doxy_pct, 0.975),"Sero_prevent_pct"=mean(stat_prevent_sero_pct),"Sero_prevent_pct_ll"=quantile(stat_prevent_sero_pct, 0.025),"Sero_prevent_pct_ul"=quantile(stat_prevent_sero_pct, 0.975),"Cond_prevent_pct"=mean(stat_prevent_cond_pct),"Cond_prevent_pct_ll"=quantile(stat_prevent_cond_pct, 0.025),"Cond_prevent_pct_ul"=quantile(stat_prevent_cond_pct, 0.975),stringsAsFactors=F))
+    
   }
 }
 
-rm(paradigm, uptake_level, current, i, j, k, stat_incidence_anal, stat_new_anal, stat_prev_anal, stat_total_anal, stat_prevent_anal, stat_prevent_cond_anal, stat_prevent_doxy_anal, stat_prevent_sero_anal, stat_prevent_cond_anal_pct, stat_prevent_doxy_anal_pct, stat_incidence_oral, stat_new_oral, stat_prev_oral, stat_total_oral, stat_prevent_oral, stat_prevent_cond_oral, stat_prevent_doxy_oral, stat_prevent_cond_oral_pct, stat_prevent_doxy_oral_pct)
+rm(uptake, adhere, current, i, j, k, abm_sims_20, abm_sims_40, abm_sims_60, abm_sims_80, abm_sims_100, stat_incidence_anal, stat_new_anal, stat_prev_anal, stat_total_anal, stat_prevent_anal, stat_prevent_cond_anal, stat_prevent_doxy_anal, stat_prevent_sero_anal, stat_prevent_sero_anal_pct, stat_prevent_cond_anal_pct, stat_prevent_doxy_anal_pct, stat_incidence_oral, stat_new_oral, stat_prev_oral, stat_total_oral, stat_prevent_oral, stat_prevent_cond_oral, stat_prevent_doxy_oral, stat_prevent_cond_oral_pct, stat_prevent_doxy_oral_pct, stat_incidence, stat_new, stat_prev, stat_total, stat_prevent, stat_prevent_cond, stat_prevent_doxy, stat_prevent_sero, stat_prevent_sero_pct, stat_prevent_cond_pct, stat_prevent_doxy_pct)
 results_infections_anal = results_infections_anal[-1, ]
 results_infections_oral = results_infections_oral[-1, ]
+results_infections = results_infections[-1, ]
 
-### Agents characteristics post-simulation 
+#contour plots of infections prevented
+p = ggplot(results_infections, aes(Uptake, Adhere, z= Doxy_prevent_pct)) +
+  geom_contour(aes(colour = ..level..)) +
+  stat_contour(color = "black") +
+  labs(x="Uptake Coverage (%)", y="Adherence Level (%)") + 
+  theme_bw() +
+  theme(text = element_text(color = "#22211d", size = 12),legend.text=element_text(size=12), plot.title = element_text(size = 12, face = "bold"), 
+        axis.title = element_text(size = 12), axis.text = element_text(size = 12), legend.title = element_text(size=12)) 
+p = direct.label(p, list("far.from.others.borders", colour='black', hjust = 1, vjust = 1))
+
+p1 = ggplot(results_infections_anal, aes(Uptake, Adhere, z= Doxy_prevent_pct)) +
+  geom_contour(aes(colour = ..level..)) +
+  stat_contour(color = "black") +
+  labs(x="Uptake Coverage (%)", y="Adherence Level (%)") + 
+  theme_bw() +
+  theme(text = element_text(color = "#22211d", size = 12),legend.text=element_text(size=12), plot.title = element_text(size = 12, face = "bold"), 
+        axis.title = element_text(size = 12), axis.text = element_text(size = 12), legend.title = element_text(size=12)) 
+p1 = direct.label(p1, list("far.from.others.borders", colour='black', hjust = 1, vjust = 1))
+
+p2 = ggplot(results_infections_oral, aes(Uptake, Adhere, z= Doxy_prevent_pct)) +
+  geom_contour(aes(colour = ..level..)) +
+  stat_contour(color = "black") +
+  labs(x="Uptake Coverage (%)", y="Adherence Level (%)") + 
+  theme_bw() +
+  theme(text = element_text(color = "#22211d", size = 12),legend.text=element_text(size=12), plot.title = element_text(size = 12, face = "bold"), 
+        axis.title = element_text(size = 12), axis.text = element_text(size = 12), legend.title = element_text(size=12)) 
+p2 = direct.label(p2, list("far.from.others.borders", colour='black', hjust = 1, vjust = 1))
+
+ggsave("contour_anal.jpeg", plot=p1, width = 8, height = 5.4, units = "in", dpi = 1200)
+ggsave("contour_oral.jpeg", plot=p2, width = 8, height = 5.4, units = "in", dpi = 1200)
+ggsave("contour_overall.jpeg", plot=p3, width = 8, height = 8.4, units = "in", dpi = 1200)
+
+rm(p, p1, p2, results_infections, results_infections_anal, results_infections_oral)
+
+# Agents characteristics post-simulation 
 
 #population at 10yr simulation end
 delta = (nagents_end - nagents_start)/20
@@ -1867,3 +2132,6 @@ for (i in 1:nsims) {
 summary(partners, na.rm=T)
 summary(sex, na.rm=T)
 rm(i,sex,partners)
+
+#% with 10 or more partners
+partners10 = ifelse(partners[-1]>=10, 1, 0)
