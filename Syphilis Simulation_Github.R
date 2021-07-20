@@ -1,6 +1,6 @@
 #################
 # Syphilis and doxycycline simulation study
-# Citation: Tran NK, Goldstein ND, Welles SL. Countering the Rise of Syphilis: A Role for Post-Exposure Doxycycline Prophylaxis?
+# Citation: Tran NK, Goldstein ND, Welles SL. Countering the Rise of Syphilis: A Role for Post-Exposure Doxycycline Prophylaxis? Manuscript in preparation.
 # Note: Simulation datasets may be downloaded from: https://drive.google.com/file/d/14ccrB6zC6JWIOYozXjo05cVvrjeX8HlT/view?usp=sharing
 # 12/4/20 -- Nguyen Tran 
 #################
