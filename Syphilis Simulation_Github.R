@@ -1,7 +1,7 @@
 #################
 # Syphilis and doxycycline simulation study
-# Citation: Tran NK, Goldstein ND, Welles SL. Countering the Rise of Syphilis: A Role for Doxycycline Post-Exposure Prophylaxis? Manuscript in preparation.
-# Note: Simulation datasets may be downloaded from: https://drive.google.com/file/d/1yN6W1OZYH515teERP1j5qirjvgYEEX7m/view?usp=sharing
+# Citation: Tran NK, Goldstein ND, Welles SL. Countering the Rise of Syphilis: A Role for Post-Exposure Doxycycline Prophylaxis?
+# Note: Simulation datasets may be downloaded from: https://drive.google.com/file/d/14ccrB6zC6JWIOYozXjo05cVvrjeX8HlT/view?usp=sharing
 # 12/4/20 -- Nguyen Tran 
 #################
 
@@ -235,8 +235,9 @@ for (sims in 1:nsims)
   baseline_pop$HIV_TEST_DAY = ifelse(futuretest==1, round(1+(110-1)*probdaytest), ifelse(futuretest==2, round(111+(220-111)*probdaytest), ifelse(futuretest==3, round(221+(330-221)*probdaytest), NA)))
   rm(testprob,probdaytest,futuretest)
   
-  #day of testing will be depdent based on HIV status
+  #day of syphilis testing will be dependent based on HIV status
   #HIV+ MSM: based on  future test probability 1=tested quarterly, 2=tested bi-annually, 3=tested annually, 4=not tested
+  testprob = runif(nagents_end[sims+1],0,1)
   futuretest = ifelse(baseline_pop$HIV_STATUS==3 & testprob<=0.22, 1, ifelse(baseline_pop$HIV_STATUS==3 & testprob<=0.43, 2, ifelse(baseline_pop$HIV_STATUS==3 & testprob<=0.71, 3, 4)))
   # HIV- or HIV unknown: only get tested annually 
   neg = ifelse(baseline_pop$HIV_STATUS==1 | baseline_pop$HIV_STATUS==2,1,0)
@@ -278,7 +279,7 @@ for (sims in 1:nsims)
   paradigm111111$VAX = 1
   paradigm111111$DOXY = 1
   paradigm111111$SYTREAT = 1 
-  paradigm111111$ONPREP = prevention_paradigm(randprep,"ONPREP",paradigm111111,0.122)
+  paradigm111111$ONPREP = prevention_paradigm(randprep,"ONPREP",paradigm111111,0.184)
   paradigm111111$TAPVL = prevention_paradigm(randtap,"TAPVL",paradigm111111)
   paradigm111111$PROBCOND = prevention_paradigm(randcond,"PROBCOND",paradigm111111)
   paradigm111111$SEROTYPE = prevention_paradigm(randsero,"SEROTYPE",paradigm111111)
@@ -312,7 +313,8 @@ for (sims in 1:nsims)
                   "paradigm111111doxy54"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,1)),
                   "paradigm111111doxy55"=cbind(paradigm111111,"ONDOXY"=prevention_paradigm(randdoxy,"ONDOXY",paradigm111111,1)))
   
-  # determine doxycycline adherence for each level of uptake 
+  # determine doxycycline adherence for each level of uptake
+  abm_sims$paradigm111111doxy00$ADHERE = 0
   abm_sims$paradigm111111doxy11$ADHERE = ifelse(abm_sims$paradigm111111doxy11$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.2, 1, 0)
   abm_sims$paradigm111111doxy12$ADHERE = ifelse(abm_sims$paradigm111111doxy12$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.4, 1, 0)
   abm_sims$paradigm111111doxy13$ADHERE = ifelse(abm_sims$paradigm111111doxy13$ONDOXY==1 & runif(nagents_end[sims+1],0,1) <= 0.6, 1, 0)
@@ -487,8 +489,8 @@ for (sims in 1:nsims)
       
       #treatment for syphilis 
       if (unique(abm_sims[[current_data]]$SYTREAT)==1) {
-        abm_sims[[current_data]]$SY_ANAL = ifelse((!is.na(abm_sims[[current_data]]$SY_TEST_DAY) & ((day-abm_sims[[current_data]]$SY_TEST_DAY) %% 365)==0) & (abm_sims[[current_data]]$SY_ANAL!=0), 0, abm_sims[[current_data]]$SY_ANAL)
-        abm_sims[[current_data]]$SY_ORAL = ifelse((!is.na(abm_sims[[current_data]]$SY_TEST_DAY) & ((day-abm_sims[[current_data]]$SY_TEST_DAY) %% 365)==0) & (abm_sims[[current_data]]$SY_ORAL!=0), 0, abm_sims[[current_data]]$SY_ORAL)
+        abm_sims[[current_data]]$SY_ANAL = ifelse((!is.na(abm_sims[[current_data]]$SY_TEST_DAY) & ((day-abm_sims[[current_data]]$SY_TEST_DAY) %% 365)==0) & (abm_sims[[current_data]]$SY_ANAL!=0) & runif(nrow(abm_sims[[current_data]]),0,1)<=0.95, 0, abm_sims[[current_data]]$SY_ANAL)
+        abm_sims[[current_data]]$SY_ORAL = ifelse((!is.na(abm_sims[[current_data]]$SY_TEST_DAY) & ((day-abm_sims[[current_data]]$SY_TEST_DAY) %% 365)==0) & (abm_sims[[current_data]]$SY_ORAL!=0) & runif(nrow(abm_sims[[current_data]]),0,1)<=0.95, 0, abm_sims[[current_data]]$SY_ORAL)
       }
       
       ## ENGAGE IN SEX ##
@@ -497,8 +499,8 @@ for (sims in 1:nsims)
       sex_selection = data.frame("Ego"=sex_network$ID[which(!is.na(sex_network[,6+day]))], "Partner"=as.numeric(na.omit(sex_network[,6+day])), stringsAsFactors=F)
       
       #sex today, multiplier is to make the algorithm more conservative from calibration (i.e. less sex)
-      sex_selection$Ego_sex = (sex_network$N_SEX_ACTS[sex_selection$Ego] / sex_network$RELATIONSHIP_DAYS[sex_selection$Ego]) <= (runif(nrow(sex_selection),0,1)*1)
-      sex_selection$Partner_sex = (sex_network$N_SEX_ACTS[sex_selection$Partner] / sex_network$RELATIONSHIP_DAYS[sex_selection$Partner]) <= (runif(nrow(sex_selection),0,1)*1)
+      sex_selection$Ego_sex = (sex_network$N_SEX_ACTS[sex_selection$Ego] / sex_network$RELATIONSHIP_DAYS[sex_selection$Ego]) <= (runif(nrow(sex_selection),0,1)*1.0)
+      sex_selection$Partner_sex = (sex_network$N_SEX_ACTS[sex_selection$Partner] / sex_network$RELATIONSHIP_DAYS[sex_selection$Partner]) <= (runif(nrow(sex_selection),0,1)*1.0)
       sex_selection = sex_selection[-1*which(sex_selection$Ego_sex==F | sex_selection$Partner_sex==F), ]
       
       #remove the duplicates (if ego has sex with partner, partner has sex with ego)
@@ -728,13 +730,16 @@ for (sims in 1:nsims)
             #calculate probabilities of doxycycline success
             randdoxy = runif(nrow(sex_exposed),0,1)
             
-            #check if infection blocked
-            sex_exposed$doxyct_anal[sex_exposed$SY_ANAL==1] = ifelse(sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1 & abm_sims[[current_data]]$ADHERE[exposed_sy_anal_ego]==1 & randdoxy[sex_exposed$SY_ANAL==1]<=0.73, 1, 0)
-            sex_exposed$partdoxyct_anal[sex_exposed$SY_ANAL==1] = ifelse(sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1 & abm_sims[[current_data]]$ADHERE[exposed_sy_anal_partner]==1 & randdoxy[sex_exposed$SY_ANAL==1]<=0.73, 1, 0)
-            sex_exposed$doxyct_oral[sex_exposed$SY_ORAL==1] = ifelse(sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]==1 & abm_sims[[current_data]]$ADHERE[exposed_sy_oral_ego]==1 & randdoxy[sex_exposed$SY_ORAL==1]<=0.73, 1, 0)
-            sex_exposed$partdoxyct_oral[sex_exposed$SY_ORAL==1] = ifelse(sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]==1 & abm_sims[[current_data]]$ADHERE[exposed_sy_oral_partner]==1 & randdoxy[sex_exposed$SY_ORAL==1]<=0.73, 1, 0)
+            #calculate probabilities of doxycycline treatment efficacy
+            betadoxy = rbeta(nrow(sex_exposed), shape1 = 6.621, shape2 = 2.405)
             
-            rm(randdoxy)
+            #check if infection blocked
+            sex_exposed$doxyct_anal[sex_exposed$SY_ANAL==1] = ifelse(sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1 & abm_sims[[current_data]]$ADHERE[exposed_sy_anal_ego]==1 & randdoxy[sex_exposed$SY_ANAL==1]<=betadoxy[sex_exposed$SY_ANAL==1], 1, 0)
+            sex_exposed$partdoxyct_anal[sex_exposed$SY_ANAL==1] = ifelse(sex_exposed$infection_sy_anal[sex_exposed$SY_ANAL==1]==1 & abm_sims[[current_data]]$ADHERE[exposed_sy_anal_partner]==1 & randdoxy[sex_exposed$SY_ANAL==1]<=betadoxy[sex_exposed$SY_ANAL==1], 1, 0)
+            sex_exposed$doxyct_oral[sex_exposed$SY_ORAL==1] = ifelse(sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]==1 & abm_sims[[current_data]]$ADHERE[exposed_sy_oral_ego]==1 & randdoxy[sex_exposed$SY_ORAL==1]<=betadoxy[sex_exposed$SY_ORAL==1], 1, 0)
+            sex_exposed$partdoxyct_oral[sex_exposed$SY_ORAL==1] = ifelse(sex_exposed$infection_sy_oral[sex_exposed$SY_ORAL==1]==1 & abm_sims[[current_data]]$ADHERE[exposed_sy_oral_partner]==1 & randdoxy[sex_exposed$SY_ORAL==1]<=betadoxy[sex_exposed$SY_ORAL==1], 1, 0)
+            
+            rm(randdoxy,betadoxy)
           }
           
           
@@ -1375,8 +1380,8 @@ rm(i)
 colMeans(annual_sy)
 
 # subset calibration data for plotting
-hiv_calibrate = annual_hiv[,c(1:9)]
-sy_calibrate = annual_sy[,c(1:9)]
+hiv_calibrate = annual_hiv[,c(2:10)]
+sy_calibrate = annual_sy[,c(2:10)]
 
 # initialize necessary estimates for plotting
 hiv_sur = c(305,286,304,328,288,313,271,278,215)
@@ -1413,7 +1418,7 @@ c_plot = ggplot(dta_calibrate, aes(years, estimates, linetype = group, shape = g
   theme(text = element_text(color = "#22211d", size = 12),legend.text=element_text(size=12), plot.title = element_text(size = 12, face = "bold"), 
         axis.title = element_text(size = 12), axis.text = element_text(size = 12), legend.title = element_blank(),legend.position = "top") 
 
-ggsave("calibration_plot.jpeg", plot=c_plot, width = 9.5, height = 5, units = "in", dpi = 1200)
+ggsave("calibration_plot.jpeg", plot=c_plot, width = 9.5, height = 5.5, units = "in", dpi = 1200)
 
 # clean up environment 
 rm(c_plot, annual_hiv, annual_sy, hiv_calibrate, sy_calibrate, dta_calibrate, i, hiv_ll, hiv_ul, sy_ll, sy_ul, hiv_sim, hiv_sur, sy_sim, sy_sur)
@@ -1773,9 +1778,9 @@ p3 = ggplot(dtaLong, aes(x=as.factor(year1), y=ir, col = as.factor(Adhere), grou
   theme(text = element_text(color = "#22211d", size = 12),legend.text=element_text(size=12), plot.title = element_text(size = 12, face = "bold"), 
         axis.title = element_text(size = 12), axis.text = element_text(size = 12), legend.title = element_text(size=12)) 
 
-ggsave("ci_anal.tiff", plot=p1, width = 10, height = 6.7, units = "in", dpi = 1200)
+ggsave("ci_anal.jpeg", plot=p1, width = 10, height = 6.7, units = "in", dpi = 1200)
 ggsave("ci_oral.jpeg", plot=p2, width = 10, height = 6.7, units = "in", dpi = 1200)
-ggsave("ci_overall.tiff", plot=p3, width = 10, height = 6.7, units = "in", dpi = 1200)
+ggsave("ci_overall.jpeg", plot=p3, width = 10, height = 6.7, units = "in", dpi = 1200)
 
 # regression 
 
@@ -1783,9 +1788,9 @@ dtaLong$Uptake = as.factor(dtaLong$Uptake)
 dtaLong$Adhere = as.factor(dtaLong$Adhere)
 
 # risk difference in anal infections for each level of doxy pep adherence at year 1, 5, and 10 under the 20% uptake scenario
-m1 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake==20 & dtaLong$year1==1,])
-m2 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake==20 & dtaLong$year1==5,])
-m3 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake==20 & dtaLong$year1==10,])
+m1 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake=="20% Uptake" & dtaLong$year1==1,])
+m2 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake=="20% Uptake" & dtaLong$year1==5,])
+m3 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake=="20% Uptake" & dtaLong$year1==10,])
 
 # calculate % difference
 abs(coef(m3)[2]/coef(m3)[1])
@@ -1797,9 +1802,9 @@ abs(coef(m3)[6]/coef(m3)[1])
 summary(m3)
 
 # risk difference in anal infections for each level of doxy pep uptake at year 1, 5, and 10 under the 100% uptake scenario 
-m1 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake==100 & dtaLong$year1==1,])
-m2 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake==100 & dtaLong$year1==5,])
-m3 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake==100 & dtaLong$year1==10,])
+m1 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake=="100% Uptake" & dtaLong$year1==1,])
+m2 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake=="100% Uptake" & dtaLong$year1==5,])
+m3 = lm(ir ~ as.factor(Adhere), data = dtaLong[dtaLong$Uptake=="100% Uptake" & dtaLong$year1==10,])
 
 # calculate % difference
 abs(coef(m3)[2]/coef(m3)[1])
@@ -1810,7 +1815,7 @@ abs(coef(m3)[6]/coef(m3)[1])
 
 summary(m3)
 
-rm(m1,m2,m3,oralLong,analLong,dtaLong)
+rm(m1,m2,m3,oralLong,analLong,dtaLong,p1,p2,p3)
 
 ### STEP7: Estimate PIA for Condoms and Doxy ###
 
@@ -2112,7 +2117,7 @@ p2 = direct.label(p2, list("far.from.others.borders", colour='black', hjust = 1,
 
 ggsave("contour_anal.jpeg", plot=p1, width = 8, height = 5.4, units = "in", dpi = 1200)
 ggsave("contour_oral.jpeg", plot=p2, width = 8, height = 5.4, units = "in", dpi = 1200)
-ggsave("contour_overall.jpeg", plot=p3, width = 8, height = 8.4, units = "in", dpi = 1200)
+ggsave("contour_overall.jpeg", plot=p, width = 8, height = 5.4, units = "in", dpi = 1200)
 
 rm(p, p1, p2, results_infections, results_infections_anal, results_infections_oral)
 
@@ -2131,7 +2136,50 @@ for (i in 1:nsims) {
 }
 summary(partners, na.rm=T)
 summary(sex, na.rm=T)
-rm(i,sex,partners)
 
 #% with 10 or more partners
-partners10 = ifelse(partners[-1]>=10, 1, 0)
+partners10 = ifelse(partners[-1]>=28.23, 1, 0)
+mean(partners10)
+rm(i,sex,partners,delta,partners10)
+
+#sensitivity analysis: restrict sample to quartiles 
+abm_sims_20 = c(abm_sims_50[rep(c(TRUE, FALSE), c(6, 20))])
+abm_sims_40 = c(abm_sims_50[rep(c(TRUE, FALSE, TRUE, FALSE), c(1, 5, 5, 15))])
+abm_sims_60 = c(abm_sims_50[rep(c(TRUE, FALSE, TRUE, FALSE), c(1, 10, 5, 10))])
+abm_sims_80 = c(abm_sims_50[rep(c(TRUE, FALSE, TRUE, FALSE), c(1, 15, 5, 5))])
+abm_sims_100 = c(abm_sims_50[rep(c(TRUE, FALSE, TRUE), c(1, 20, 5))])
+
+# quartile 1: 0 - 7 
+# quartile 2: 8 - 17
+# quartile 3: 18 - 31
+# quartile 4: 32 - 156
+
+abm_sims_20 = lapply(abm_sims_20, subset, c(PARTNERS>31))
+abm_sims_40 = lapply(abm_sims_40, subset,  c(PARTNERS>31))
+abm_sims_60 = lapply(abm_sims_60, subset,  c(PARTNERS>31))
+abm_sims_80 = lapply(abm_sims_80, subset,  c(PARTNERS>31))
+abm_sims_100 = lapply(abm_sims_100, subset, c(PARTNERS>31))
+
+# re-run STEP7: Estimate PIA for Condoms and Doxy for each quartile 
+
+# save results_infection for each quartile into a separate datafile
+# dta_qrt1 = results_infections[,c("Uptake","Adhere","Doxy_prevent_pct")]
+# dta_qrt2 = results_infections[,c("Uptake","Adhere","Doxy_prevent_pct")]
+# dta_qrt3 = results_infections[,c("Uptake","Adhere","Doxy_prevent_pct")]
+# dta_qrt4 = results_infections[,c("Uptake","Adhere","Doxy_prevent_pct")]
+
+# merge each quartile dataframe together
+dta = rbind(dta_qrt1, dta_qrt2, dta_qrt3, dta_qrt4)
+dta$part_qrt = rep(1:4, each = 30)
+
+# plot contour plot for PIA by quartile of sexual partners 
+p = ggplot(dta, aes(Uptake, Adhere, z= Doxy_prevent_pct)) +
+  geom_contour(aes(colour = ..level..)) +
+  stat_contour(color = "black") +
+  labs(x="Uptake Coverage (%)", y="Adherence Level (%)") + 
+  facet_wrap(~Partner_Q) +
+  theme_bw() +
+  theme(text = element_text(color = "#22211d", size = 12),legend.text=element_text(size=12), plot.title = element_text(size = 12, face = "bold"), 
+        axis.title = element_text(size = 12), axis.text = element_text(size = 12), legend.title = element_text(size=12)) 
+p = direct.label(p, list("far.from.others.borders", colour='black', hjust = 1, vjust = 1))
+ggsave("supple_fig_contour_plot.jpeg", plot=p, width = 8.5, height = 8.5, units = "in", dpi = 1200)
